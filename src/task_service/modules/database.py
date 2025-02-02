@@ -100,7 +100,7 @@ dbTasks = [
         detection_model_id=1,
         classification_model_id=1,
         status_id=3,
-        input_path="./src/app/images/img_1.png"
+        input_path="img_1.png"
     ),
     Tasks(
         owner_id=1,
@@ -109,7 +109,7 @@ dbTasks = [
         detection_model_id=2,
         classification_model_id=1,
         status_id=1,
-        input_path="./src/app/images/img_2.png"
+        input_path="img_2.png"
     ),
     Tasks(
         owner_id=1,
@@ -118,7 +118,7 @@ dbTasks = [
         detection_model_id=1,
         classification_model_id=1,
         status_id=2,
-        input_path="./src/app/images/img_3.png"
+        input_path="img_3.png"
     ),
     Tasks(
         owner_id=2,
@@ -127,7 +127,7 @@ dbTasks = [
         detection_model_id=1,
         classification_model_id=1,
         status_id=3,
-        input_path="./src/app/images/img_4.png"
+        input_path="img_4.png"
     )
 ]
 

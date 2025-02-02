@@ -58,7 +58,7 @@ async def post_task(
             raise HTTPException(status_code=400,
                                 detail=f"Model id was not correct. Choose from (id, name, type) {d_models+c_models}.")
 
-        input_path = INPUT_IMAGE_SAVE_PATH+image_file.filename
+        input_path = image_file.filename
         async with aiofiles.open(input_path, 'wb') as out_file:
             while content := await image_file.read(1024):  # async read chunk
                 await out_file.write(content)  # async write chunk
@@ -140,7 +140,7 @@ def get_task_input_by_id(current_user: Annotated[User, Depends(get_current_user)
     if task is None:
         raise HTTPException(status_code=404, detail=f"Task with id {task_id} does not exist.")
     else:
-        task_path = Path(task.input_path)
+        task_path = Path(INPUT_IMAGE_SAVE_PATH + task.input_path)
         if not task_path.is_file():
             raise HTTPException(status_code=404, detail=f"Input image file for task with id {task_id} does not exist in image directory.")
 
