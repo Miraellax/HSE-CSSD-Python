@@ -2,12 +2,10 @@ FROM python:3.12-rc-alpine as python_build
 #Переносим исходники в контейнер
 WORKDIR /app
 COPY ./src .
-#Добавляем зависимости для компиляции бинарников для питона
-RUN apk add libpq-dev rust cargo
 #Ставим зависимости
-RUN pip install -r requirements.txt
-#Удаляем зависимости компиляции
-RUN apk del -r libpq-dev rust cargo
+RUN apk add libpq-dev rust cargo --virtual build-deps \
+    && pip install -r requirements.txt \
+    && apk del build-deps
 #Добавляем зависимости времени выполнения
 RUN apk add libpq
 #Добавляем точку входа в контейнер
