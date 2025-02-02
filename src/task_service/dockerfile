@@ -1,0 +1,14 @@
+FROM python:3.12-rc-alpine as python_build
+#Переносим исходники в контейнер
+WORKDIR /app
+COPY ./src .
+#Добавляем зависимости для компиляции бинарников для питона
+RUN apk add libpq-dev rust cargo
+#Ставим зависимости
+RUN pip install -r requirements.txt
+#Удаляем зависимости компиляции
+RUN apk del -r libpq-dev rust cargo
+#Добавляем зависимости времени выполнения
+RUN apk add libpq
+#Добавляем точку входа в контейнер
+ENTRYPOINT ["fastapi", "run", "main.py", "--port", "80"]
