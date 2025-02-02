@@ -19,8 +19,7 @@ from ..auth.schema import User
 
 router = APIRouter(prefix="/tasks")
 
-INPUT_IMAGE_SAVE_PATH = "./src/app/images/"
-
+INPUT_IMAGE_SAVE_PATH = "./images/"
 
 # GET api/tasks/{id:integer}
 @router.get("/{task_id}", response_model=task_schemas.Task)
