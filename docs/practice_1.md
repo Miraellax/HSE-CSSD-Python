@@ -18,11 +18,11 @@ POSTGRES_NAME=hse_architecture
 APP_HOST_PORT=80
 ```
 
-Функция get_db() отвечает за получение сессии подключения для выполнения запросов к данным.
+Функция [get_db()](https://github.com/Miraellax/HSE-CSSD-Python/blob/c2d398bfb8540cce44d3fcf3847e4cea34caed67/src/task_service/src/modules/database.py#L24) отвечает за получение сессии подключения для выполнения запросов к данным.
 
 В рамках практической работы при запуске системы происходит создание всех таблиц БД и добавление тестовых данных для демонстрации возможностей системы и тестирования методов. Далее при разработке это будет убрано.
 
-Таблицы БД описаны с помощью моделей SQLAlchemy ORM (см. practice_0) в файле models.py. При инициализации данных тестовые данные создаются как объекты моделей:
+Таблицы БД описаны с помощью моделей SQLAlchemy ORM (см. practice_0) в файле [models.py](https://github.com/Miraellax/HSE-CSSD-Python/blob/feat-practice_0/src/task_service/src/modules/db_models/models.py). При инициализации данных тестовые данные создаются как объекты моделей:
 
 ![img_2_12.png](img/img_2_12.png)
 
@@ -37,9 +37,9 @@ APP_HOST_PORT=80
 
 ![img_2_11.png](img/img_2_11.png)
 
-Переменные в .env не изменены. Функция получения get_db() сессии изменена на асинхронную.
+Переменные в .env не изменены. Функция получения [get_db()](https://github.com/Miraellax/HSE-CSSD-Python/blob/6d893aceb8232aff70a4efff3a17c39914593e87/src/task_service/src/modules/database.py#L37) сессии изменена на асинхронную.
 
-Для инициализации таблиц в БД и тестовых данных асинхронно создана функция lifespan с декоратором @asynccontextmanager, позволяющая инициализировать БД и запускать сервер uvicorn в одном лупе:
+Для инициализации таблиц в БД и тестовых данных асинхронно создана функция [lifespan](https://github.com/Miraellax/HSE-CSSD-Python/blob/6d893aceb8232aff70a4efff3a17c39914593e87/src/task_service/src/main.py#L17) с декоратором @asynccontextmanager, позволяющая инициализировать БД и запускать сервер uvicorn в одном лупе:
 
 ![img_2_5.png](img/img_2_5.png)
 
@@ -47,7 +47,7 @@ APP_HOST_PORT=80
 
 Принцип инициализации данных не изменился - сначала идет загрузка словарей, потом данных, ссылающихся на них. 
 
-Функция создания тестовых данных становится асинхронной и ожидает (await) выполнение задач, связанных с загрузкой данных в БД.
+[Функция создания тестовых данных](https://github.com/Miraellax/HSE-CSSD-Python/blob/6d893aceb8232aff70a4efff3a17c39914593e87/src/task_service/src/modules/database.py#L192) становится асинхронной и ожидает (await) выполнение задач, связанных с загрузкой данных в БД.
 
 ![img_2_13.png](img/img_2_13.png)
 
@@ -56,7 +56,7 @@ APP_HOST_PORT=80
 
 ### База данных и FastAPI сервер
 
-См. выше в Асинхронном подключении БД
+См. выше в Асинхронном подключении БД.
 
 ### Запросы к БД
 
@@ -89,7 +89,7 @@ GET запрос к данным выполняется с помощью фун
 
 ### Тестирование изменений
 
-После изменения типа подключения к БД и запросов на асинхронные варианты, было проведено тестирование эндпоинтов и кодов ответов с помощью созданной в practice_0 коллекции тестов Postman.
+После изменения типа подключения к БД и запросов на асинхронные варианты, было проведено тестирование эндпоинтов и кодов ответов с помощью созданной в practice_0 коллекции тестов Postman ([ссылка](https://github.com/Miraellax/HSE-CSSD-Python/blob/6d893aceb8232aff70a4efff3a17c39914593e87/src/task_service/src/modules/database.py#L192)).
 
 В ходе тестирования выявлены и исправлены некоторые ошибки. Успешные результаты тестирования:
 
@@ -112,6 +112,7 @@ C4 - Container:
 ![c4 Container.drawio.png](img/c4%20Container.drawio.png)
 
 C4 - Components (interface):
+
 ![c4 Components interface.drawio.png](img/c4%20Components%20interface.drawio.png)
 
 Сервер системы взаимодействует с БД и с сервисами Моделей нейросетей для обработки изображений.
@@ -127,7 +128,7 @@ C4 - Components (models):
 
 Так как Модели нейросетей и система разрабатываются на языке Python - для реализации API выбран фреймворк **FastAPI**.
 ___
-Добавление роутеров разных модулей (Tasks, Auth..) и запуск сервера FastAPI происходит в файле [main.py]() при исполнении файла/при запуске Docker-контейнеров или с помощью команды ```# fastapi run src/app/main.py```.
+Добавление роутеров разных модулей (Tasks, Auth..) и запуск сервера FastAPI происходит в файле [main.py](https://github.com/Miraellax/HSE-CSSD-Python/blob/feat-practice_1/src/task_service/src/main.py) при исполнении файла/при запуске Docker-контейнеров или с помощью команды ```# fastapi run src/app/main.py```.
 
 ![img_2_16.png](img/img_2_16.png)
 
@@ -146,7 +147,7 @@ ___
 ### Application
 На уровне приложения и на уровне хранения данных используется одна модель данных, так как выбран ORM подход библиотеки SQLAlchemy для работы с БД.
 
-Для работы с данными из PostgreSQL внутри сервера FastAPI были созданы ORM [модели данных](https://github.com/Miraellax/HSE-CSSD-Python/blob/feat-practice_0/src/task_service/src/modules/db_models/models.py) с помощью библиотеки SqlAlchemy.
+Для работы с данными из PostgreSQL внутри сервера FastAPI были созданы ORM [модели данных](https://github.com/Miraellax/HSE-CSSD-Python/blob/feat-practice_1/src/task_service/src/modules/db_models/models.py) с помощью библиотеки SqlAlchemy.
 
 ![img_2_17.png](img/img_2_17.png)
 
@@ -161,13 +162,16 @@ ___
 ![img.png](img/img.png)
 
 Функции запросов к БД, описанные в соответствующем сущности файле dao.py, используют DTO для работы с данными:
-1. При получении данных из БД объект приводится к классу модели SQLAlchemy ORM. (dao.py) 
+1. При получении данных из БД объект приводится к классу модели SQLAlchemy ORM. (dao.py)
+
 ![img_2_19.png](img/img_2_19.png)
 
-2. При возвращении данных роутером из БД, объект из класса модели SQLAlchemy ORM приводится к классу схемы Pydantic - Task, полный набор полей. (router.py, schema.py) 
+3. При возвращении данных роутером из БД, объект из класса модели SQLAlchemy ORM приводится к классу схемы Pydantic - Task, полный набор полей. (router.py, schema.py) 
+
 ![img_2_21.png](img/img_2_21.png)
 
-3. При создании объекта и загрузке его в БД роутер создает объект класса схемы Pydantic - TaskCreate, только необходимые для создания поля. (schema.py) 
+4. При создании объекта и загрузке его в БД роутер создает объект класса схемы Pydantic - TaskCreate, только необходимые для создания поля. (schema.py) 
+
 ![img_2_20.png](img/img_2_20.png)
 
 ### Domain 
@@ -210,7 +214,7 @@ ___
 ## Тестирование системы
 
 ### Тестирование API
-В рамках практики practice_0 была разработана коллекция тестов в Postman для тестирования эндпоинтов API и возможных кодов ответов (см. Тестирование методов API).
+В рамках практики practice_0 была разработана коллекция тестов в Postman для тестирования эндпоинтов API и возможных кодов ответов (см. [Тестирование методов API](https://github.com/Miraellax/HSE-CSSD-Python/blob/feat-practice_1/src/task_service/src/main.py)).
 
 После изменения функций с синхронных на асинхронные, тестирование было проведено повторно - ошибок нет (см. Тестирование изменений).
 
@@ -222,7 +226,7 @@ ___
 
 Сервер FastAPI изолирован в отдельный сервис, для него создан образ докер-контейнера [task_service](../src/task_service).
 
-Добавлены файлы [docker-compose](../src/task_service/docker-compose.yaml) и [dockerfile]() для запуска сервиса FastAPI вместе с БД (PostrgeSQL).
+Добавлены файлы [docker-compose](https://github.com/Miraellax/HSE-CSSD-Python/blob/feat-practice_1/src/task_service/docker-compose.yaml) и [dockerfile](https://github.com/Miraellax/HSE-CSSD-Python/blob/feat-practice_1/src/task_service/dockerfile) для запуска сервиса FastAPI вместе с БД (PostrgeSQL).
 
 Для запуска контейнеров необходимо выполнить команду ```docker-compose up``` из папки "HSE-CSSD-Python\src\task_service".
 
