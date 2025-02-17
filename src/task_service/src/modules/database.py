@@ -3,6 +3,7 @@ import dotenv
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
 from .db_models.models import Tasks, Status, SceneClass, PrimitiveClass, DetectionModels, ClassificationModels, Predictions, Users
 
@@ -14,19 +15,28 @@ DB_HOST = os.getenv("POSTGRES_HOST")
 DB_PORT = os.getenv("POSTGRES_PORT")
 DB_NAME = os.getenv("POSTGRES_NAME")
 
+# Sync DB
+# DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+# engine = create_engine(DATABASE_URL)
+# session_maker = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+#
+#
+# def get_db():
+#     db = session_maker()
+#     try:
+#         yield db
+#     finally:
+#         db.close()
 
-DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-print(DATABASE_URL)
-engine = create_engine(DATABASE_URL)
-session_maker = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+# Async DB
+DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+engine = create_async_engine(DATABASE_URL, echo=True)
+session_maker = async_sessionmaker(engine, autocommit=False, autoflush=False, expire_on_commit=False, class_=AsyncSession)
 
 
-def get_db():
-    db = session_maker()
-    try:
-        yield db
-    finally:
-        db.close()
+async def get_db():
+    async with session_maker() as session:
+        yield session
 
 # Словарь классов сцен
 dbSceneClasses = [
@@ -179,70 +189,70 @@ dbPredictions = [
 ]
 
 
-def init_data():
+async def init_data():
     # Заполнение словарей
-    with session_maker() as session:
+    async with session_maker() as session:
         try:
             for scene in dbSceneClasses:
                 session.add(scene)
-                session.commit()
+                await session.commit()
         except Exception as e:
-            session.rollback()
+            await session.rollback()
             raise e
 
-    with session_maker() as session:
+    async with session_maker() as session:
         try:
             for primitive in dbPrimitiveClasses:
                 session.add(primitive)
-                session.commit()
+                await session.commit()
         except Exception as e:
-            session.rollback()
+            await session.rollback()
             raise e
 
-    with session_maker() as session:
+    async with session_maker() as session:
         try:
             for status in dbStatuses:
                 session.add(status)
-                session.commit()
+                await session.commit()
         except Exception as e:
-            session.rollback()
+            await session.rollback()
             raise e
 
-    with session_maker() as session:
+    async with session_maker() as session:
         try:
             for model in dbDModels:
                 session.add(model)
-                session.commit()
+                await session.commit()
         except Exception as e:
-            session.rollback()
+            await session.rollback()
             raise e
 
 
     # Заполнение тестовых данных
     # Добавление пользователей должно следовать перед добавлением задач
-    with session_maker() as session:
+    async with session_maker() as session:
         try:
             for user in dbUsers:
                 session.add(user)
-                session.commit()
+                await session.commit()
         except Exception as e:
-            session.rollback()
+            await session.rollback()
             raise e
 
-    with session_maker() as session:
+    async with session_maker() as session:
         try:
             for task in dbTasks:
                 session.add(task)
-                session.commit()
+                await session.commit()
         except Exception as e:
-            session.rollback()
+            await session.rollback()
             raise e
 
-    with session_maker() as session:
+    async with session_maker() as session:
         try:
             for pred in dbPredictions:
                 session.add(pred)
-                session.commit()
+                await session.commit()
         except Exception as e:
-            session.rollback()
+            await session.rollback()
             raise e

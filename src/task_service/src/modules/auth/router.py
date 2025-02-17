@@ -6,6 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jwt import InvalidTokenError
 from passlib.context import CryptContext
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .. import database
@@ -33,12 +35,14 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-def get_user(username: str, db: Session) -> Union[user_schemas.User, None]:
-    return db.query(models.Users).filter(models.Users.username == username).first()
+async def get_user(username: str, db: AsyncSession) -> Union[user_schemas.User, None]:
+    q = select(models.Users).filter(models.Users.username == username)
+
+    return (await db.execute(q)).scalar()
 
 
-def authenticate_user(username: str, password: str, db: Session):
-    user = get_user(db=db, username=username)
+async def authenticate_user(username: str, password: str, db: AsyncSession):
+    user = await get_user(db=db, username=username)
     if not user:
         return False
     if not verify_password(password, user.hashed_password):
@@ -55,7 +59,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Session = Depends(
+async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: AsyncSession = Depends(
         database.get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -71,18 +75,18 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Se
         token_data = user_schemas.TokenData(username=username)
     except InvalidTokenError:
         raise credentials_exception
-    user = get_user(db=db, username=token_data.username)
+    user = await get_user(db=db, username=token_data.username)
     if user is None:
         raise credentials_exception
     return user
 
 # 1) POST api/oauth/login
 @router.post("/login")
-def login_for_access_token(
-        form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: Session = Depends(
-        database.get_db)
+async def login_for_access_token(
+        form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+        db: AsyncSession = Depends(database.get_db)
 ) -> Union[user_schemas.Token, None]:
-    user = authenticate_user(db=db, username=form_data.username, password=form_data.password)
+    user = await authenticate_user(db=db, username=form_data.username, password=form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

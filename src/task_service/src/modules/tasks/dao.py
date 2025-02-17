@@ -1,5 +1,7 @@
 from typing import Union, List
 
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
 from ..db_models import models
@@ -14,29 +16,25 @@ from . import schema as task_schema
 # DELETE api/tasks/{id:integer}
 
 
-def get_task(db: Session, owner_id: int, task_id: int) -> Union[models.Tasks, None]:
-    return (db.query(models.Tasks)
-            .filter(models.Tasks.owner_id == owner_id, models.Tasks.id == task_id)
-            .first()
-            )
+async def get_task(db: AsyncSession, owner_id: int, task_id: int) -> Union[models.Tasks, None]:
+    q = select(models.Tasks).filter(models.Tasks.owner_id == owner_id, models.Tasks.id == task_id)
+
+    return (await db.execute(q)).scalar()
 
 
-def get_tasks_by_owner(db: Session, owner_id: int) -> List[models.Tasks]:
-    # return db.query(models.Tasks).filter(models.Tasks.owner_id == owner_id).all()
-    return (db.query(models.Tasks)
-            .filter(models.Tasks.owner_id == owner_id)
-            .all()
-            )
+async def get_tasks_by_owner(db: AsyncSession, owner_id: int) -> List[models.Tasks]:
+    q = select(models.Tasks).filter(models.Tasks.owner_id == owner_id)
+
+    return (await db.execute(q)).scalars().all()
 
 
-def get_task_result(db: Session, task_id: int) -> List[models.Predictions]:
-    return (db.query(models.Predictions)
-            .filter(models.Predictions.task_id == task_id)
-            .all()
-            )
+async def get_task_result(db: AsyncSession, task_id: int) -> List[models.Predictions]:
+    q = select(models.Predictions).filter(models.Predictions.task_id == task_id)
+
+    return (await db.execute(q)).scalars().all()
 
 
-def create_task(db: Session, task: task_schema.TaskCreate):
+async def create_task(db: AsyncSession, task: task_schema.TaskCreate):
     task = models.Tasks(owner_id=task.owner_id,
                         detection_model_id=task.detection_model_id,
                         classification_model_id=task.classification_model_id,
@@ -44,14 +42,14 @@ def create_task(db: Session, task: task_schema.TaskCreate):
                         input_path=task.input_path)
 
     db.add(task)
-    db.commit()
-    db.refresh(task)
+    await db.commit()
+    await db.refresh(task)
 
     return task
 
 
-def delete_task(db: Session, task: models.Tasks) -> Union[int, None]:
-    db.delete(task)
-    db.commit()
+async def delete_task(db: AsyncSession, task: models.Tasks) -> Union[int, None]:
+    await db.delete(task)
+    await db.commit()
 
     return task.id
