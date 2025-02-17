@@ -1,11 +1,13 @@
+import asyncio
+
 import aiofiles
+import aiohttp
 from pathlib import Path
 from typing import Union, Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session
 
 from .. import database
 from . import schema as task_schemas
@@ -214,3 +216,19 @@ async def delete_task_by_id(current_user: Annotated[User, Depends(get_current_us
         raise HTTPException(status_code=404, detail=f"Task with id {task_id} does not exist.")
 
 # await (await fetch('/tasks/1', {method: "DELETE", headers:{'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmaXJzdCIsImV4cCI6MTc0MDA2MzI5Nn0.9XloWont-KzCBYGDYDGz5N1tQv2LD8kDusZg684fApc'}})).json()
+
+
+# Тестовый POST метод для взаимодействия с контейнером модели
+@router.post("/test_service_connection", response_model=None)
+async def test_service_connection(
+                    current_user: Annotated[User, Depends(get_current_user)],
+                    image_file: UploadFile,
+                    detection_model_id: int,
+                    db: AsyncSession = Depends(database.get_db)) -> JSONResponse:
+
+    # will try post task only if auth
+    async with aiohttp.ClientSession() as session:
+            data = aiohttp.FormData()
+            data.add_field("image_file", image_file.file, filename=image_file.filename, content_type=image_file.content_type)
+            async with session.post("http://detection_model_1/model/", data=data) as response:
+                return JSONResponse(content=await response.json())

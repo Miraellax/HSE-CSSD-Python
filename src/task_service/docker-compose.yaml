@@ -43,6 +43,13 @@ services:
       - "80:80"
     networks:
       - task-service
+  detection_model_1:
+    container_name: detection-model-service
+    build:
+      context: ../detection_model_service
+      dockerfile: ../detection_model_service/dockerfile
+    networks:
+      - task-service
 
 volumes:
   task-service-postgres-db:
