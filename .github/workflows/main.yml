@@ -1,0 +1,14 @@
+name: Test-CI
+run-name: Integrating...
+on:
+  push:
+    branches:
+      - feat-architecture
+jobs:
+  Setup-services:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository branch to runner
+        uses: actions/checkout@v4
+      - name: Try to start server, DB and model containers
+        run: cd "src/task_service" && docker compose up &
