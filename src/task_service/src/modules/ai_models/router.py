@@ -1,6 +1,7 @@
 from typing import Annotated, Union
 
 from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
 
@@ -15,13 +16,13 @@ router = APIRouter(prefix="/models")
 
 # 7) GET api/models
 @router.get("/", response_model=None)
-def get_model_list(current_user: Annotated[User, Depends(get_current_user)],
-                   db: Session = Depends(database.get_db)
-                   ) -> JSONResponse:
+async def get_model_list(current_user: Annotated[User, Depends(get_current_user)],
+                         db: AsyncSession = Depends(database.get_db)
+                         ) -> JSONResponse:
 
     # will get models only if auth
-    classification_models = models_dao.get_classification_models(db=db)
-    detection_models = models_dao.get_detection_models(db=db)
+    classification_models = await models_dao.get_classification_models(db=db)
+    detection_models = await models_dao.get_detection_models(db=db)
 
     result = {
         "detection_models": [

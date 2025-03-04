@@ -4,6 +4,7 @@ from typing import Union, Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
 from .. import database
@@ -23,12 +24,12 @@ INPUT_IMAGE_SAVE_PATH = "./images/"
 
 # GET api/tasks/{id:integer}
 @router.get("/{task_id}", response_model=task_schemas.Task)
-def get_task_by_id(current_user: Annotated[User, Depends(get_current_user)],
+async def get_task_by_id(current_user: Annotated[User, Depends(get_current_user)],
                    task_id: int,
-                   db: Session = Depends(database.get_db)
+                   db: AsyncSession = Depends(database.get_db)
                    ) -> Union[task_schemas.Task, None]:
     # will get task only if auth
-    task = task_dao.get_task(db=db, owner_id=current_user.id, task_id=task_id)
+    task = await task_dao.get_task(db=db, owner_id=current_user.id, task_id=task_id)
 
     if task is None:
         raise HTTPException(status_code=404, detail=f"Task with id {task_id} does not exist.")
@@ -44,12 +45,12 @@ async def post_task(
                     image_file: UploadFile,
                     detection_model_id: int,
                     classification_model_id: int,
-                    db: Session = Depends(database.get_db)) -> JSONResponse:
+                    db: AsyncSession = Depends(database.get_db)) -> JSONResponse:
 
     # will post only if auth
     if image_file is not None:
-        d_models = [(model.id, model.name, "detection_model") for model in ai_models_dao.get_detection_models(db=db)]
-        c_models = [(model.id, model.name, "classification_model") for model in ai_models_dao.get_classification_models(db=db)]
+        d_models = [(model.id, model.name, "detection_model") for model in await ai_models_dao.get_detection_models(db=db)]
+        c_models = [(model.id, model.name, "classification_model") for model in await ai_models_dao.get_classification_models(db=db)]
 
         d_model_ids = [model[0] for model in d_models]
         c_model_ids = [model[0] for model in c_models]
@@ -64,8 +65,8 @@ async def post_task(
                 await out_file.write(content)  # async write chunk
 
         # get "queued" status id
-        statuses = status_dao.get_status_values(db=db)
-        task = task_dao.create_task(
+        statuses = await status_dao.get_status_values(db=db)
+        task = await task_dao.create_task(
             db=db,
             task=task_schemas.TaskCreate(
                 owner_id=current_user.id,
@@ -83,13 +84,13 @@ async def post_task(
 
 # 3) GET api/tasks
 @router.get("/", response_model=None)
-def get_current_user_tasks(current_user: Annotated[User, Depends(get_current_user)],
-                           db: Session = Depends(database.get_db)
+async def get_current_user_tasks(current_user: Annotated[User, Depends(get_current_user)],
+                           db: AsyncSession = Depends(database.get_db)
                            ) -> JSONResponse:
 
     # will get tasks only if auth
-    tasks = task_dao.get_tasks_by_owner(db=db, owner_id=current_user.id)
-    statuses = status_dao.get_status_values(db=db)
+    tasks = await task_dao.get_tasks_by_owner(db=db, owner_id=current_user.id)
+    statuses = await status_dao.get_status_values(db=db)
 
     result = {"tasks": [{"id": task.id,
                        "status": next((status.status for status in statuses if status.id == task.status_id), None),
@@ -105,14 +106,14 @@ def get_current_user_tasks(current_user: Annotated[User, Depends(get_current_use
 
 # 4) GET api/tasks/{id:integer}/status
 @router.get("/{task_id}/status", response_model=None)
-def get_task_status_by_id(current_user: Annotated[User, Depends(get_current_user)],
+async def get_task_status_by_id(current_user: Annotated[User, Depends(get_current_user)],
                          task_id: int,
-                         db: Session = Depends(database.get_db)
+                         db: AsyncSession = Depends(database.get_db)
                          ) -> JSONResponse:
 
     # will get task only if auth
-    task = task_dao.get_task(db=db, owner_id=current_user.id, task_id=task_id)
-    statuses = status_dao.get_status_values(db=db)
+    task = await task_dao.get_task(db=db, owner_id=current_user.id, task_id=task_id)
+    statuses = await status_dao.get_status_values(db=db)
 
     if task is None:
         raise HTTPException(status_code=404, detail=f"Task with id {task_id} does not exist.")
@@ -129,13 +130,13 @@ def get_task_status_by_id(current_user: Annotated[User, Depends(get_current_user
 # 5) GET api/tasks/{id:integer}/input
 # actually response_model=FileResponse, but there is a bug, that doesn't allow it to be used
 @router.get("/{task_id}/input", response_model=None)
-def get_task_input_by_id(current_user: Annotated[User, Depends(get_current_user)],
+async def get_task_input_by_id(current_user: Annotated[User, Depends(get_current_user)],
                          task_id: int,
-                         db: Session = Depends(database.get_db)
+                         db: AsyncSession = Depends(database.get_db)
                          ) -> FileResponse:
 
     # will get task only if auth
-    task = task_dao.get_task(db=db, owner_id=current_user.id, task_id=task_id)
+    task = await task_dao.get_task(db=db, owner_id=current_user.id, task_id=task_id)
 
     if task is None:
         raise HTTPException(status_code=404, detail=f"Task with id {task_id} does not exist.")
@@ -151,23 +152,23 @@ def get_task_input_by_id(current_user: Annotated[User, Depends(get_current_user)
 
 # 6) GET api/tasks/{id:integer}/result
 @router.get("/{task_id}/result", response_model=None)
-def get_task_result_by_id(current_user: Annotated[User, Depends(get_current_user)],
+async def get_task_result_by_id(current_user: Annotated[User, Depends(get_current_user)],
                          task_id: int,
-                         db: Session = Depends(database.get_db)
+                         db: AsyncSession = Depends(database.get_db)
                          ) -> JSONResponse:
 
     # will get task only if auth
-    task = task_dao.get_task(db=db, owner_id=current_user.id, task_id=task_id)
+    task = await task_dao.get_task(db=db, owner_id=current_user.id, task_id=task_id)
 
     if task is None:
         raise HTTPException(status_code=404, detail=f"Task with id {task_id} does not exist.")
     else:
         # will get predictions only if auth and owner of task
-        statuses = status_dao.get_status_values(db=db)
-        scene_classes = scene_class_dao.get_scene_class_values(db=db)
-        primitive_classes = primitive_class_dao.get_primitive_class_values(db=db)
+        statuses = await status_dao.get_status_values(db=db)
+        scene_classes = await scene_class_dao.get_scene_class_values(db=db)
+        primitive_classes = await primitive_class_dao.get_primitive_class_values(db=db)
 
-        preds = predictions_dao.get_predictions(db=db, task_id=task_id)
+        preds = await predictions_dao.get_predictions(db=db, task_id=task_id)
 
         result = {
             "id": task.id,
@@ -194,16 +195,16 @@ def get_task_result_by_id(current_user: Annotated[User, Depends(get_current_user
 
 # 8) DELETE api/tasks/{id:integer}/result
 @router.delete("/{task_id}", response_model=None)
-def delete_task_by_id(current_user: Annotated[User, Depends(get_current_user)],
+async def delete_task_by_id(current_user: Annotated[User, Depends(get_current_user)],
                       task_id: int,
-                      db: Session = Depends(database.get_db)
+                      db: AsyncSession = Depends(database.get_db)
                       ) -> JSONResponse:
 
     # will delete task only if auth
-    task = task_dao.get_task(db=db, owner_id=current_user.id, task_id=task_id)
+    task = await task_dao.get_task(db=db, owner_id=current_user.id, task_id=task_id)
 
     if task is not None:
-        deleted_task_id = task_dao.delete_task(db=db, task=task)
+        deleted_task_id = await task_dao.delete_task(db=db, task=task)
 
         result = {
             "id": deleted_task_id
