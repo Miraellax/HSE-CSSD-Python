@@ -1,10 +1,12 @@
 import asyncio
+import os
 
 import aiofiles
 import aiohttp
 from pathlib import Path
 from typing import Union, Annotated
 
+import dotenv
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,9 +22,19 @@ from ..primitive_class import dao as primitive_class_dao
 from ..auth.router import get_current_user
 from ..auth.schema import User
 
+from ..server_producer import dispatch_task_detect_primitives
+
+dotenv.load_dotenv()
+TASK_ID_BYTE_SIZE = int(os.getenv("TASK_ID_BYTE_SIZE"))
+
 router = APIRouter(prefix="/tasks")
 
 INPUT_IMAGE_SAVE_PATH = "./images/"
+
+def read_image(file_path):
+    with open(file_path, "rb") as file:
+        image_bytes = file.read()
+    return image_bytes
 
 # GET api/tasks/{id:integer}
 @router.get("/{task_id}", response_model=task_schemas.Task)
@@ -77,6 +89,16 @@ async def post_task(
                 status_id=next((status.id for status in statuses if status.status == "queued"), None),
                 input_path=input_path)
         )
+
+        # SEND task to detection model via Kafka and await the sending
+        try:
+            await dispatch_task_detect_primitives(task_id=task.id.to_bytes(TASK_ID_BYTE_SIZE),
+                                                          image=read_image(input_path),
+                                                          loop=asyncio.get_event_loop())
+        except Exception:
+            # Delete task that was not sent to detection
+            await task_dao.delete_task(db=db, task=task)
+            raise HTTPException(status_code=500, detail=f"The task cannot be sent to the detection model, it was not saved in the DB.")
 
         if task is not None:
             result = { "id": task.id }
