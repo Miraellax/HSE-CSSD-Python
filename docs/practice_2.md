@@ -378,3 +378,11 @@ asyncio.ensure_future(load_predictions(), loop=main_loop)
 Тестирование метода POST create_task прошло успешно:
 ![img_3_4.png](img/img_3_4.png)
 
+
+Успешный запуск контейнеров:
+
+![img_3_6.png](img/img_3_6.png)
+
+Успешная обработка сообщений и загрузка данных в БД:
+
+![img_3_7.png](img/img_3_7.png)

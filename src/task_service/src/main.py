@@ -17,9 +17,9 @@ from modules.ai_models.router import router as router_models
 from modules.auth.router import router as router_auth
 
 import modules.server_producer as sp
-from src.task_service.src.modules.predictions import schema as prediction_schema
-from src.task_service.src.modules.predictions.dao import post_predictions
-from src.task_service.src.modules.server_consumer import get_consumer
+from modules.predictions import schema as prediction_schema
+from modules.predictions.dao import post_predictions
+from modules.server_consumer import get_consumer
 
 dotenv.load_dotenv()
 

@@ -6,7 +6,7 @@ import dotenv
 
 from model_consumer import get_consumer
 from ai_model.ai_model import process
-from src.detection_model_service.src.model_producer import dispatch_task_detected_primitives
+from model_producer import dispatch_task_detected_primitives
 
 dotenv.load_dotenv("../../task_service/.env")
 

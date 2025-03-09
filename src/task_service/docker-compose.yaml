@@ -35,6 +35,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_PORT: 5432
       POSTGRES_USER: task-service
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      TASK_ID_BYTE_SIZE: 16
     depends_on:
       postgres:
         condition: service_healthy
@@ -48,14 +50,14 @@ services:
   kafka:
     container_name: kafka
     image: apache/kafka:latest
-    ports:
-      - 9093:9093
     healthcheck:
       test: cd /opt/kafka/bin/ && ./kafka-topics.sh --bootstrap-server kafka:9092 --list
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
+    networks:
+      - task-service
     environment:
       # KRaft
       KAFKA_NODE_ID: 1
@@ -64,10 +66,11 @@ services:
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9091
       
       # Listeners
-      KAFKA_LISTENERS: CONTROLLER://localhost:9091,DOCKER://0.0.0.0:9092,HOST://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: DOCKER://kafka:9092,HOST://localhost:9093
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,DOCKER:PLAINTEXT,HOST:PLAINTEXT
+      KAFKA_LISTENERS: CONTROLLER://localhost:9091,DOCKER://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: DOCKER://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,DOCKER:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
+      KAFKA_ADVERTISED_HOST_NAME: kafka
 
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_NUM_PARTITIONS: 1
@@ -76,6 +79,8 @@ services:
      - kafka-data:/var/lib/kafka/data
   init-kafka:
     image: apache/kafka:latest
+    networks:
+      - task-service
     depends_on:
       kafka:
         condition: service_healthy
@@ -99,6 +104,9 @@ services:
     build:
       context: ../detection_model_service
       dockerfile: ../detection_model_service/dockerfile
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      TASK_ID_BYTE_SIZE: 16
     networks:
       - task-service
     depends_on:
