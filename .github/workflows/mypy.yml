@@ -21,4 +21,4 @@ jobs:
         pip install -r src/detection_model_service/src/requirements.txt
     - name: Analysing the code with mypy
       run: |
-        MYPYPATH=src mypy --disallow-untyped-defs --namespace-packages --explicit-package-bases src
+        mypy --disallow-untyped-defs --namespace-packages --explicit-package-bases src
