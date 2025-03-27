@@ -17,8 +17,8 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install Dependencies
       run: |
-        pip install -r task_service/src/requirements.txt
-        pip install -r detection_model_service/src/requirements.txt
+        pip install -r src/task_service/src/requirements.txt
+        pip install -r src/detection_model_service/src/requirements.txt
     - name: Analysing the code with mypy
       run: |
         MYPYPATH=src mypy --disallow-untyped-defs --namespace-packages --explicit-package-bases src
