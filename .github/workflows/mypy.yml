@@ -19,6 +19,7 @@ jobs:
       run: |
         pip install -r src/task_service/src/requirements.txt
         pip install -r src/detection_model_service/src/requirements.txt
+        pip install mypy
     - name: Analysing the code with mypy
       run: |
         mypy --disallow-untyped-defs --namespace-packages --explicit-package-bases src
