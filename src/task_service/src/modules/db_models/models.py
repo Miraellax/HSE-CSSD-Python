@@ -6,6 +6,7 @@ from sqlalchemy.orm import declarative_base
 
 # Базовый класс для таблиц базы данных
 Base = declarative_base()
+base_metadata = Base.metadata
 
 class Users(Base):
     __tablename__ = "users"

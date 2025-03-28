@@ -87,11 +87,11 @@ async def server_consumer(main_loop):
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    if init_db:
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
-            await conn.run_sync(Base.metadata.create_all)
-        await init_data()
+    # if init_db:
+    #     async with engine.begin() as conn:
+    #         await conn.run_sync(Base.metadata.drop_all)
+    #         await conn.run_sync(Base.metadata.create_all)
+    #     await init_data()
 
     current_loop = asyncio.get_running_loop()
     consumer_thread = Thread(target=lambda: asyncio.run(server_consumer(current_loop)))
