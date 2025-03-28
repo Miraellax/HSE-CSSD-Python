@@ -59,29 +59,31 @@
 ## Шардирование PostgreSQL
 Для шардирования базы данных решено использовать встроенный механизм - создать 4 таблицы Предсказаний и передавать/запрашивать данные через обобщающую таблицу-сервер.
 
-Были настроены миграции БД с Alembic, создана миграция инициализации БД с заполнением тестовых данных - [ссылка]().
+Были настроены миграции БД с Alembic, создана миграция инициализации БД с заполнением тестовых данных - [ссылка](https://github.com/Miraellax/HSE-CSSD-Python/blob/feat-practice_3/src/task_service/migrations/versions/fb76fd147766_init.py).
 
 На ее основе создан SQL скрипт (```alembic upgrade head --sql```) для создания таблиц и заполнения данных, скрипт отредактирован для создания внешних таблиц шардов и для серверов под них:
 
 1. Разделение таблицы predictions на части (partitions) по столбцу task_id:
+
 ![img_14.png](img/img_4_14.png)
 
 2. Создание трех серверов для внешних таблиц:
+
 ![img_22.png](img/img_4_22.png)
 
 3. Создание внешних таблиц на соответствующих серверах, для таблиц выбраны значения task_id по остатку от деления на 4 (количество шардов):
+
 ![img_15.png](img/img_4_15.png)
 
 4. Создание последней таблицы-шарда, находящейся на основном сервере:
+
 ![img_16.png](img/img_4_16.png)
 
 5. Создание тестовых данных, включая таблицу predictions:
+
 ![img_21.png](img/img_4_21.png)
 
-Пример полученных данных в основной таблице и в ее внешних таблицах-шардах:
-
-
-Для создания трех контейнеров внешних серверов в [docker-compose]() добавлены соответствующие описания:
+Для создания трех контейнеров внешних серверов в [docker-compose](https://github.com/Miraellax/HSE-CSSD-Python/blob/3d3adb46dfe1bc2792844049cda31b81cce8842a/src/task_service/docker-compose.yaml#L36) добавлены соответствующие описания:
 
 ![img_17.png](img/img_4_17.png)
 
@@ -93,7 +95,7 @@
 
 ![img_19.png](img/img_4_19.png)
 
-В docker-compose описан запуск скриптов для инициализации БД, скрипты для основного сервера лежат в папке [db_migrations/leader]() и содержат полный [скрипт]() создания таблиц и внешних серверов, а для шардов лежат в папке [db_migrations/shard]() и содержат [скрипт]() для создания только таблиц prediction, т.к остальные не нужны.
+В docker-compose описан запуск скриптов для инициализации БД, скрипты для основного сервера лежат в папке [db_migrations/leader](https://github.com/Miraellax/HSE-CSSD-Python/tree/feat-practice_3/src/task_service/db_migrations/leader) и содержат полный [скрипт](https://github.com/Miraellax/HSE-CSSD-Python/blob/feat-practice_3/src/task_service/db_migrations/leader/db.sql) создания таблиц и внешних серверов, а для шардов лежат в папке [db_migrations/shard](https://github.com/Miraellax/HSE-CSSD-Python/tree/feat-practice_3/src/task_service/db_migrations/shard) и содержат [скрипт](https://github.com/Miraellax/HSE-CSSD-Python/blob/feat-practice_3/src/task_service/db_migrations/shard/db.sql) для создания только таблиц prediction, т.к остальные не нужны.
 
 В основном скрипте main.py закомментирован предыдущий вариант инициализации таблиц, теперь работают SQL скрипты при подьеме контейнеров:
 
