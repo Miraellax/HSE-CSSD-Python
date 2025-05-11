@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import os
 
 import aiofiles
@@ -10,17 +11,19 @@ import dotenv
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import HTMLResponse
 
 from .. import database
 from . import schema as task_schemas
 from . import dao as task_dao
-from ..predictions import dao as predictions_dao
+from ..primitive_predictions import dao as predictions_dao
 from ..ai_models import dao as ai_models_dao
 from ..status import dao as status_dao
 from ..scene_class import dao as scene_class_dao
 from ..primitive_class import dao as primitive_class_dao
 from ..auth.router import get_current_user
 from ..auth.schema import User
+from ..scene_class_predictions.dao import get_scene_class_predictions
 
 from ..server_producer import dispatch_task_detect_primitives
 
@@ -29,7 +32,7 @@ TASK_ID_BYTE_SIZE = int(os.getenv("TASK_ID_BYTE_SIZE"))
 
 router = APIRouter(prefix="/tasks")
 
-INPUT_IMAGE_SAVE_PATH = "./images/"
+INPUT_IMAGE_SAVE_PATH = "./images"
 
 def read_image(file_path):
     with open(file_path, "rb") as file:
@@ -73,7 +76,7 @@ async def post_task(
             raise HTTPException(status_code=400,
                                 detail=f"Model id was not correct. Choose from (id, name, type) {d_models+c_models}.")
 
-        input_path = image_file.filename
+        input_path = f"{INPUT_IMAGE_SAVE_PATH}/{image_file.filename}"
         async with aiofiles.open(input_path, 'wb') as out_file:
             while content := await image_file.read(1024):  # async read chunk
                 await out_file.write(content)  # async write chunk
@@ -165,7 +168,7 @@ async def get_task_input_by_id(current_user: Annotated[User, Depends(get_current
     if task is None:
         raise HTTPException(status_code=404, detail=f"Task with id {task_id} does not exist.")
     else:
-        task_path = Path(INPUT_IMAGE_SAVE_PATH + task.input_path)
+        task_path = Path(task.input_path)
         if not task_path.is_file():
             raise HTTPException(status_code=404, detail=f"Input image file for task with id {task_id} does not exist in image directory.")
 
@@ -191,22 +194,37 @@ async def get_task_result_by_id(current_user: Annotated[User, Depends(get_curren
         statuses = await status_dao.get_status_values(db=db)
         scene_classes = await scene_class_dao.get_scene_class_values(db=db)
         primitive_classes = await primitive_class_dao.get_primitive_class_values(db=db)
+        class_probs = await get_scene_class_predictions(db=db, task_id=task_id)
+        img = await get_task_input_by_id(db=db, task_id=task_id, current_user=current_user)
 
         preds = await predictions_dao.get_predictions(db=db, task_id=task_id)
+        with open(img.path, "rb") as f:
+            image_bytes = f.read()
+            img_base64 = base64.b64encode(image_bytes).decode("utf-8")
+
+        cl_probs = {}
+        for x in class_probs:
+            class_name = next((scene_class.scene_class for scene_class in scene_classes if scene_class.id == x.scene_class_id), None)
+            cl_probs[class_name] = x.scene_class_prob
 
         result = {
             "id": task.id,
+            "img": img_base64,
             "status": next((status.status for status in statuses if status.id == task.status_id), None),
             "result": {
                 "image_class": next((scene_class.scene_class for scene_class in scene_classes if scene_class.id == task.scene_class_id), None),
+                "class_probs": cl_probs,
                 "primitives": [
                     {
                         "primitive_class": next((primitive_class.primitive_class for primitive_class in primitive_classes if primitive_class.id == pred.primitive_class_id), None),
-                        "x": pred.x_coord,
-                        "y": pred.y_coord,
-                        "width": pred.width,
-                        "height": pred.height,
-                        "rotation": pred.rotation,
+                        "x1": pred.x1_coord,
+                        "y1": pred.y1_coord,
+                        "x2": pred.x2_coord,
+                        "y2": pred.y2_coord,
+                        "x3": pred.x3_coord,
+                        "y3": pred.y3_coord,
+                        "x4": pred.x4_coord,
+                        "y4": pred.y4_coord,
                         "probability": pred.probability
                     } for pred in preds
                 ]
@@ -247,7 +265,6 @@ async def test_service_connection(
                     image_file: UploadFile,
                     detection_model_id: int,
                     db: AsyncSession = Depends(database.get_db)) -> JSONResponse:
-
     # will try post task only if auth
     async with aiohttp.ClientSession() as session:
             data = aiohttp.FormData()

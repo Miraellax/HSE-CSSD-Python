@@ -46,7 +46,7 @@ KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS")
 
 config = {
         'bootstrap.servers': KAFKA_BOOTSTRAP_SERVERS,
-
+        'message.max.bytes': 52428800,
         # Fixed properties
         'acks': 'all'
     }
@@ -70,10 +70,14 @@ topic_detected_primitives = "detected-primitives"
 topic_classified_image = "classified-image"
 
 async def dispatch_task_detect_primitives(task_id: bytes, image: bytes, loop):
-    result = await producer.produce(topic=topic_detect_primitives, value=task_id+image, loop=loop)
+    try:
+        result = await producer.produce(topic=topic_detect_primitives, value=task_id+image, loop=loop)
+    except Exception as e:
+        print(e)
     return result
 
-async def dispatch_task_detected_primitives(image):
-    pass
+async def dispatch_task_classify_image(task_id:bytes, primitives: bytes, loop):
+    result = await producer.produce(topic=topic_classify_image, value=task_id+primitives, loop=loop)
+    return result
 
 
