@@ -57,15 +57,26 @@ class ClassificationModels(Base):
     id = Column(Integer, primary_key=True, nullable=False, unique=True)
     name = Column(String, unique=True, nullable=False)
 
-class Predictions(Base):
-    __tablename__ = "predictions"
+class PrimitivePredictions(Base):
+    __tablename__ = "primitive_predictions"
 
     id = Column(Integer, primary_key=True, nullable=False, unique=True)
     task_id = Column(Integer, ForeignKey("tasks.id", ondelete="cascade"), nullable=False)
     primitive_class_id = Column(Integer, ForeignKey("primitive_class.id"), nullable=False)
-    x_coord = Column(Float, CheckConstraint("x_coord >= 0 AND x_coord <= 1"), nullable=False)
-    y_coord = Column(Float, CheckConstraint("y_coord >= 0 AND y_coord <= 1"), nullable=False)
-    width = Column(Float, CheckConstraint("width >= 0 AND width <= 1"), nullable=False)
-    height = Column(Float, CheckConstraint("height >= 0 AND height <= 1"), nullable=False)
-    rotation = Column(Float, CheckConstraint("rotation >= 0 AND rotation <= 1"), nullable=False)
+    x1_coord = Column(Float, CheckConstraint("x1_coord >= 0 AND x1_coord <= 1"), nullable=False)
+    y1_coord = Column(Float, CheckConstraint("y1_coord >= 0 AND y1_coord <= 1"), nullable=False)
+    x2_coord = Column(Float, CheckConstraint("x2_coord >= 0 AND x2_coord <= 1"), nullable=False)
+    y2_coord = Column(Float, CheckConstraint("y2_coord >= 0 AND y2_coord <= 1"), nullable=False)
+    x3_coord = Column(Float, CheckConstraint("x3_coord >= 0 AND x3_coord <= 1"), nullable=False)
+    y3_coord = Column(Float, CheckConstraint("y3_coord >= 0 AND y3_coord <= 1"), nullable=False)
+    x4_coord = Column(Float, CheckConstraint("x4_coord >= 0 AND x4_coord <= 1"), nullable=False)
+    y4_coord = Column(Float, CheckConstraint("y4_coord >= 0 AND y4_coord <= 1"), nullable=False)
     probability = Column(Float, CheckConstraint("probability >= 0 AND probability <= 1"), nullable=False)
+
+class SceneClassPredictions(Base):
+    __tablename__ = "scene_class_predictions"
+
+    id = Column(Integer, primary_key=True, nullable=False, unique=True)
+    task_id = Column(Integer, ForeignKey("tasks.id", ondelete="cascade"), nullable=False)
+    scene_class_id = Column(Integer, ForeignKey("primitive_class.id"), nullable=False)
+    scene_class_prob = Column(Float, CheckConstraint("scene_class_prob >= 0 AND scene_class_prob <= 1"), nullable=False)

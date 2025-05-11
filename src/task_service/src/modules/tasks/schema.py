@@ -19,3 +19,4 @@ class Task(TaskBase):
 
     class Config:
         from_attributes = True
+

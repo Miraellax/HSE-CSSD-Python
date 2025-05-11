@@ -1,0 +1,130 @@
+<html>
+	<style>
+	* { font-family: Helvetica; }
+	</style>
+	<body style="background-color:white;">
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table>
+				<tbody>
+					<tr>
+						<td><b>Класс</b></td>
+						<td><b>Вероятность</b></td>
+					</tr>
+					<tr id="office">
+						<td>Офис</td>
+						<td style="text-align: center;">{{res["result"]["class_probs"]["office"]}}</td>
+					</tr>
+					<tr id="livingroom">
+						<td>Жилая комната</td>
+						<td style="text-align: center;">{{res["result"]["class_probs"]["livingroom"]}}</td>
+					</tr>
+					<tr id="greenhouse">
+						<td>Теплица</td>
+						<td style="text-align: center;">{{res["result"]["class_probs"]["greenhouse"]}}</td>
+					</tr>
+					<tr id="warehouse">
+						<td>Склад</td>
+						<td style="text-align: center;">{{res["result"]["class_probs"]["warehouse"]}}</td>
+					</tr>
+				</tbody>
+			</table>
+			<div style="display: grid; width:550px; height: 550px;">
+				<img id="target_image" src="data:image/jpeg;base64, {{res['img']}}" style="grid-row: 1;grid-column: 1; width:100%; height: 100%; object-fit: contain"/>
+				<svg xmlns="http://www.w3.org/2000/svg" id="predictions_overlay" style="grid-row: 1;grid-column: 1;margin:auto">
+					<defs>
+						<filter x="0" y="0" width="1" height="1" id="cyan">
+							<feFlood flood-color="cyan"/>
+							<feComposite in="SourceGraphic"/>
+						</filter>
+						<filter x="0" y="0" width="1" height="1" id="violet">
+							<feFlood flood-color="violet"/>
+							<feComposite in="SourceGraphic"/>
+						</filter>
+						<filter x="0" y="0" width="1" height="1" id="orange">
+							<feFlood flood-color="orange"/>
+							<feComposite in="SourceGraphic"/>
+						</filter>
+						<filter x="0" y="0" width="1" height="1" id="DodgerBlue">
+							<feFlood flood-color="DodgerBlue"/>
+							<feComposite in="SourceGraphic"/>
+						</filter>
+						<filter x="0" y="0" width="1" height="1" id="yellow">
+							<feFlood flood-color="yellow"/>
+							<feComposite in="SourceGraphic"/>
+						</filter>
+					</defs>
+				</svg>
+			</div>
+			<table>
+				<tbody>
+					<tr>
+						<td style="background-color: cyan;">Куб</td>
+						<td style="background-color: violet;">Цилиндр</td>
+						<td style="background-color: orange;">Торус</td>
+						<td style="background-color: DodgerBlue;">Конус</td>
+						<td style="background-color: yellow;">Сфера</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</body>
+	<script type="text/javascript">
+
+
+		const row = document.getElementById("{{res["result"]["image_class"]}}");
+		row.style.background = "#bdff76";
+
+		const image = document.getElementById("target_image");
+		image.onload = () => {
+			const primitives = {{res["result"]["primitives"]|tojson}};
+
+			const classColor = {
+				"куб": "cyan",
+				"цилиндр": "violet",
+				"торус": "orange",
+				"конус": "DodgerBlue",
+				"сфера": "yellow"
+			};
+
+			const { naturalWidth, naturalHeight, width, height } = image;
+			const overlay = document.getElementById("predictions_overlay");
+			overlay.setAttribute("viewBox", `0 0 ${naturalWidth} ${naturalHeight}`);
+			let polys = [];
+			for (const item of primitives)
+			{
+				const poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+				poly.setAttribute("points", `${item.x1*naturalWidth},${item.y1*naturalHeight} ${item.x2*naturalWidth},${item.y2*naturalHeight} ${item.x3*naturalWidth},${item.y3*naturalHeight} ${item.x4*naturalWidth},${item.y4*naturalHeight}`);
+				poly.setAttribute("fill", "transparent");
+				poly.setAttribute("stroke", classColor[item.primitive_class]);
+				poly.setAttribute("stroke-width", "0.5%");
+				poly.setAttribute("index", polys.length);
+				polys.push(poly);
+				poly.data = item;
+				overlay.appendChild(poly);
+			}
+
+			overlay.onclick = (e) => {
+				const elements = document.elementsFromPoint(e.clientX, e.clientY);
+				for (const poly of polys)
+					poly.text?.remove();
+
+				for (const item of elements) {
+					if (item.data == null)
+						continue;
+					item.text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+					item.text.setAttribute("x", item.data.x2*naturalWidth);
+					item.text.setAttribute("y", item.data.y2*naturalHeight);
+					item.text.innerHTML = `${item.data.primitive_class} ${item.data.probability}`;
+					item.text.style.fill = "black";
+					item.text.style.fontSize = Math.max(naturalWidth, naturalHeight)/40;
+					item.text.setAttribute("filter", `url(#${classColor[item.data.primitive_class]})`)
+					overlay.appendChild(item.text);
+				}
+			};
+
+			const scale = Math.min(width / naturalWidth, height / naturalHeight);
+			overlay.style.height = `${naturalHeight * scale}px`;
+			overlay.style.width = `${naturalWidth * scale}px`;
+		};
+	</script>
+<html>

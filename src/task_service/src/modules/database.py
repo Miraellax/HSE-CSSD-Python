@@ -5,7 +5,7 @@ import dotenv
 # from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
-from .db_models.models import Tasks, Status, SceneClass, PrimitiveClass, DetectionModels, ClassificationModels, Predictions, Users
+from .db_models.models import Tasks, Status, SceneClass, PrimitiveClass, DetectionModels, ClassificationModels, PrimitivePredictions, Users
 
 dotenv.load_dotenv()
 
@@ -127,44 +127,56 @@ dbTasks = [
 ]
 
 dbPredictions = [
-    Predictions(
+    PrimitivePredictions(
         task_id=1,
         primitive_class_id=1,
-        x_coord=0.5,
-        y_coord=0.5,
-        width=0.1,
-        height=0.1,
-        rotation=0.2,
+        x1_coord=0.1,
+        y1_coord=0.1,
+        x2_coord=0.2,
+        y2_coord=0.2,
+        x3_coord=0.3,
+        y3_coord=0.3,
+        x4_coord=0.4,
+        y4_coord=0.4,
         probability=0.8
     ),
-    Predictions(
+    PrimitivePredictions(
         task_id=1,
         primitive_class_id=2,
-        x_coord=0.2,
-        y_coord=0.2,
-        width=0.1,
-        height=0.1,
-        rotation=0.2,
+        x1_coord=0.1,
+        y1_coord=0.1,
+        x2_coord=0.2,
+        y2_coord=0.2,
+        x3_coord=0.3,
+        y3_coord=0.3,
+        x4_coord=0.4,
+        y4_coord=0.4,
         probability=0.88
     ),
-    Predictions(
+    PrimitivePredictions(
         task_id=1,
         primitive_class_id=3,
-        x_coord=0.8,
-        y_coord=0.8,
-        width=0.1,
-        height=0.1,
-        rotation=0.2,
+        x1_coord=0.2,
+        y1_coord=0.2,
+        x2_coord=0.3,
+        y2_coord=0.3,
+        x3_coord=0.4,
+        y3_coord=0.4,
+        x4_coord=0.5,
+        y4_coord=0.5,
         probability=0.85
     ),
-    Predictions(
+    PrimitivePredictions(
         task_id=4,
         primitive_class_id=3,
-        x_coord=0.8,
-        y_coord=0.8,
-        width=0.1,
-        height=0.1,
-        rotation=0.2,
+        x1_coord=0.3,
+        y1_coord=0.3,
+        x2_coord=0.4,
+        y2_coord=0.4,
+        x3_coord=0.5,
+        y3_coord=0.5,
+        x4_coord=0.6,
+        y4_coord=0.6,
         probability=0.28
     ),
 ]

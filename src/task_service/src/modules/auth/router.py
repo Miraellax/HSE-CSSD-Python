@@ -27,8 +27,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+
 
 
 def get_password_hash(password):
@@ -40,6 +39,8 @@ async def get_user(username: str, db: AsyncSession) -> Union[user_schemas.User, 
 
     return (await db.execute(q)).scalar()
 
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
 
 async def authenticate_user(username: str, password: str, db: AsyncSession):
     user = await get_user(db=db, username=username)

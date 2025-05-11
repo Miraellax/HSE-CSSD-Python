@@ -142,6 +142,10 @@ services:
       start_period: 10s
     networks:
       - task-service
+    ports:
+      - "9093:9093"
+      - "9092:9092"
+      - "9091:9091"
     environment:
       # KRaft
       KAFKA_NODE_ID: 1
@@ -150,15 +154,18 @@ services:
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9091
       
       # Listeners
-      KAFKA_LISTENERS: CONTROLLER://localhost:9091,DOCKER://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: DOCKER://kafka:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,DOCKER:PLAINTEXT
+      KAFKA_LISTENERS: CONTROLLER://localhost:9091,DOCKER://0.0.0.0:9092,HOST://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: DOCKER://kafka:9092,HOST://localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,DOCKER:PLAINTEXT,HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
       KAFKA_ADVERTISED_HOST_NAME: kafka
 
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_NUM_PARTITIONS: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+
+      KAFKA_REPLICA_FETCH_MAX_BYTES: 52428800
+      KAFKA_MESSAGE_MAX_BYTES: 52428800
     volumes:
      - kafka-data:/var/lib/kafka/data
   init-kafka:
@@ -193,6 +200,33 @@ services:
       TASK_ID_BYTE_SIZE: 16
     networks:
       - task-service
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    depends_on:
+      init-kafka:
+        condition: service_completed_successfully
+  classification_model_1:
+    container_name: classification-model-service
+    build:
+      context: ../classification_model_service
+      dockerfile: ../classification_model_service/dockerfile
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      TASK_ID_BYTE_SIZE: 16
+    networks:
+      - task-service
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
     depends_on:
       init-kafka:
         condition: service_completed_successfully

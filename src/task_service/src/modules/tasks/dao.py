@@ -1,19 +1,11 @@
 from typing import Union, List
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
 from ..db_models import models
 from . import schema as task_schema
-
-
-# GET api/tasks/{id:integer}        +
-# GET api/tasks                     +
-# GET api/tasks/{id}/input          +
-# GET tasks/{id}/result             +
-# POST api/tasks                    +
-# DELETE api/tasks/{id:integer}
 
 
 async def get_task(db: AsyncSession, owner_id: int, task_id: int) -> Union[models.Tasks, None]:
@@ -28,8 +20,14 @@ async def get_tasks_by_owner(db: AsyncSession, owner_id: int) -> List[models.Tas
     return (await db.execute(q)).scalars().all()
 
 
-async def get_task_result(db: AsyncSession, task_id: int) -> List[models.Predictions]:
-    q = select(models.Predictions).filter(models.Predictions.task_id == task_id)
+async def get_task_primitives_result(db: AsyncSession, task_id: int) -> List[models.PrimitivePredictions]:
+    q = select(models.PrimitivePredictions).filter(models.PrimitivePredictions.task_id == task_id)
+
+    return (await db.execute(q)).scalars().all()
+
+
+async def get_task_scene_classes_result(db: AsyncSession, task_id: int) -> List[models.SceneClassPredictions]:
+    q = select(models.SceneClassPredictions).filter(models.SceneClassPredictions.task_id == task_id)
 
     return (await db.execute(q)).scalars().all()
 
@@ -53,3 +51,21 @@ async def delete_task(db: AsyncSession, task: models.Tasks) -> Union[int, None]:
     await db.commit()
 
     return task.id
+
+
+async def update_task_status(db: AsyncSession, task_id: int, new_status_id: int):
+    stmt = update(models.Tasks).where(models.Tasks.id == task_id).values(status_id=new_status_id)
+    await db.execute(stmt)
+    await db.commit()
+
+    task = select(models.Tasks).filter(models.Tasks.id == task_id)
+    return (await db.execute(task)).scalar()
+
+
+async def update_task_scene_class(db: AsyncSession, task_id: int, new_scene_class_id: int):
+    stmt = update(models.Tasks).where(models.Tasks.id == task_id).values(scene_class_id=new_scene_class_id)
+    await db.execute(stmt)
+    await db.commit()
+
+    task = select(models.Tasks).filter(models.Tasks.id == task_id)
+    return (await db.execute(task)).scalar()

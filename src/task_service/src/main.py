@@ -1,25 +1,29 @@
-import ast
 import asyncio
 import json
 import os
-
 from contextlib import asynccontextmanager
 from threading import Thread
-
 import dotenv
 import uvicorn
 from fastapi import FastAPI
+from starlette.staticfiles import StaticFiles
 
-from modules.database import engine, init_data, get_db_session
-from modules.db_models.models import Base
+from modules.database import get_db_session
 from modules.tasks.router import router as router_tasks
 from modules.ai_models.router import router as router_models
 from modules.auth.router import router as router_auth
+from modules.pages.router import router as router_pages
+from modules.primitive_predictions import schema as primitive_prediction_schema
+from modules.primitive_predictions.dao import post_primitive_predictions
+from modules.primitive_class.dao import get_primitive_class_id
+from modules.scene_class_predictions import schema as scene_class_prediction_schema
+from modules.scene_class_predictions.dao import post_scene_class_predictions
+from modules.scene_class.dao import get_scene_class_id
+from modules.tasks.dao import update_task_status, update_task_scene_class
 
 import modules.server_producer as sp
-from modules.predictions import schema as prediction_schema
-from modules.predictions.dao import post_predictions
 from modules.server_consumer import get_consumer
+
 
 dotenv.load_dotenv()
 
@@ -44,39 +48,67 @@ async def server_consumer(main_loop):
                 # Обработка результатов детекции
                 if msg.topic() == "detected-primitives":
                     # Получаем айди задачи и результат
-                    task_id, result = int.from_bytes(msg.value()[0:TASK_ID_BYTE_SIZE]), (msg.value()[TASK_ID_BYTE_SIZE:]).decode("utf-8")
-                    print(f"SERVER GOT DETECTION MODEL RESULT for task_id({task_id}):", result)
+                    val = msg.value()
+                    task_id, result = int.from_bytes(val[0:TASK_ID_BYTE_SIZE]), (val[TASK_ID_BYTE_SIZE:]).decode("utf-8")
 
                     # Загрузка результата в БД по айди задачи
-                    result_dicts = json.loads(result)
-                    print(result_dicts)
-                    preds = [
-                        prediction_schema.PredictionCreate(
-                            task_id=task_id,
-                            primitive_class_id=pred["class_id"],
-                            x_coord=pred["x_coord"],
-                            y_coord=pred["y_coord"],
-                            width=pred["width"],
-                            height=pred["height"],
-                            rotation=pred["rotation"],
-                            probability=pred["probability"]
-                    ) for pred in result_dicts]
+                    primitive_result_dicts = json.loads(result)
     
-                    async def load_predictions():
+                    async def load_primitive_predictions():
                         async with get_db_session() as ses:
-                            await post_predictions(db=ses, predictions=preds)
+                            preds = [
+                                primitive_prediction_schema.PrimitivePredictionCreate(
+                                    task_id=task_id,
+                                    primitive_class_id=(await get_primitive_class_id(db=ses, primitive_class=pred["class_name"])).id,
+                                    x1_coord=pred["x1_coord"],
+                                    y1_coord=pred["y1_coord"],
+                                    x2_coord=pred["x2_coord"],
+                                    y2_coord=pred["y2_coord"],
+                                    x3_coord=pred["x3_coord"],
+                                    y3_coord=pred["y3_coord"],
+                                    x4_coord=pred["x4_coord"],
+                                    y4_coord=pred["y4_coord"],
+                                    probability=pred["probability"]
+                                ) for pred in primitive_result_dicts]
 
-                    asyncio.ensure_future(load_predictions(), loop=main_loop)
-                    # TODO вызывать классификацию
+                            await post_primitive_predictions(db=ses, predictions=preds)
 
-                # TODO Обработка результатов классификации
+                    asyncio.ensure_future(load_primitive_predictions(), loop=main_loop)
+
+                    # Вызов классификации
+                    await sp.dispatch_task_classify_image(task_id=task_id.to_bytes(TASK_ID_BYTE_SIZE),
+                                                          primitives=json.dumps(primitive_result_dicts).encode('utf-8'),
+                                                          loop=asyncio.get_event_loop())
+
                 elif msg.topic() == "classified-image":
                     # Получаем айди задачи и результат
-                    task_id, result_bytes = msg.value()[0:TASK_ID_BYTE_SIZE], msg.value()[TASK_ID_BYTE_SIZE:]
-                    print(f"SERVER GOT CLASSIFICATION MODEL RESULT for task_id({int.from_bytes(task_id)}):",
-                          result_bytes.decode("utf-8"))
+                    task_id, result = int.from_bytes(msg.value()[0:TASK_ID_BYTE_SIZE]), (msg.value()[TASK_ID_BYTE_SIZE:]).decode("utf-8")
 
-                    # TODO загрузить результаты классов для задачи в БД, обновить статус задачи на "сделано"
+                    # Загрузка результата в БД по айди задачи
+                    class_result_dicts = json.loads(result)
+
+                    async def load_scene_class_predictions():
+                        async with get_db_session() as ses:
+                            class_preds = []
+                            for i, scene_class in enumerate(class_result_dicts["classes"].values()):
+                                class_preds.append(
+                                    scene_class_prediction_schema.SceneClassPredictionCreate(
+                                        task_id=task_id,
+                                        scene_class_id=(await get_scene_class_id(db=ses, scene_class=scene_class)).id,
+                                        scene_class_prob=class_result_dicts["class_probs"][i]
+                                    )
+                                )
+                            await post_scene_class_predictions(db=ses, predictions=class_preds)
+
+                    asyncio.ensure_future(load_scene_class_predictions(), loop=main_loop)
+                    # Обновление статуса и топ класса сцены задачи
+                    async def load_task_updates():
+                        async with get_db_session() as ses:
+                            # status_id 3 = done
+                            await update_task_status(db=ses, task_id=task_id, new_status_id=3)
+                            class_id = (await get_scene_class_id(db=ses, scene_class=class_result_dicts["top_class_name"])).id
+                            await update_task_scene_class(db=ses, task_id=task_id, new_scene_class_id=class_id)
+                    asyncio.ensure_future(load_task_updates(), loop=main_loop)
 
     except KeyboardInterrupt:
         pass
@@ -87,12 +119,6 @@ async def server_consumer(main_loop):
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    # if init_db:
-    #     async with engine.begin() as conn:
-    #         await conn.run_sync(Base.metadata.drop_all)
-    #         await conn.run_sync(Base.metadata.create_all)
-    #     await init_data()
-
     current_loop = asyncio.get_running_loop()
     consumer_thread = Thread(target=lambda: asyncio.run(server_consumer(current_loop)))
     consumer_thread.start()
@@ -102,6 +128,8 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+app.include_router(router_pages)
 
 app.include_router(router_tasks)
 

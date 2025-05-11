@@ -18,7 +18,8 @@ from src.task_service.src.modules.db_models.models import (SceneClass,
                                                            ClassificationModels,
                                                            Users,
                                                            Tasks,
-                                                           Predictions
+                                                           PrimitivePredictions,
+                                                           SceneClassPredictions
                                                            )
 
 
@@ -34,19 +35,21 @@ dbSceneClasses = [
     SceneClass(
         scene_class="office"),
     SceneClass(
-        scene_class="beach"),
+        scene_class="warehouse"),
     SceneClass(
-        scene_class="street")
+        scene_class="greenhouse"),
+    SceneClass(
+        scene_class="livingroom"),
 ]
 
 # Словарь классов примитивов
 dbPrimitiveClasses = [
     PrimitiveClass(
-        primitive_class="cuboid"),
+        primitive_class="cube"),
     PrimitiveClass(
         primitive_class="sphere"),
     PrimitiveClass(
-        primitive_class="pyramid"),
+        primitive_class="cone"),
     PrimitiveClass(
         primitive_class="torus"),
     PrimitiveClass(
@@ -62,9 +65,8 @@ dbStatuses = [
 
 # Словарь моделей детекции
 dbDModels = [
-    DetectionModels(name="YOLO"),
-    DetectionModels(name="SSD"),
-    ClassificationModels(name="model_v1"),
+    DetectionModels(name="YOLOv11m-obb"),
+    ClassificationModels(name="GRU_model_v1"),
 ]
 
 # Тестовые данные
@@ -83,16 +85,16 @@ dbTasks = [
         detection_model_id=1,
         classification_model_id=1,
         status_id=3,
-        input_path="img_1.png"
+        input_path="images\\img_1.png"
     ),
     Tasks(
         owner_id=1,
         # created_at="2024-04-25T18:25:43.511Z",
         scene_class_id=None,
-        detection_model_id=2,
+        detection_model_id=1,
         classification_model_id=1,
         status_id=1,
-        input_path="img_2.png"
+        input_path="images\\img_2.png"
     ),
     Tasks(
         owner_id=1,
@@ -101,7 +103,7 @@ dbTasks = [
         detection_model_id=1,
         classification_model_id=1,
         status_id=2,
-        input_path="img_3.png"
+        input_path="images\\img_3.png"
     ),
     Tasks(
         owner_id=2,
@@ -110,49 +112,61 @@ dbTasks = [
         detection_model_id=1,
         classification_model_id=1,
         status_id=3,
-        input_path="img_4.png"
+        input_path="images\\img_4.png"
     )
 ]
 
 dbPredictions = [
-    Predictions(
+    PrimitivePredictions(
         task_id=1,
         primitive_class_id=1,
-        x_coord=0.5,
-        y_coord=0.5,
-        width=0.1,
-        height=0.1,
-        rotation=0.2,
+        x1_coord=0.1,
+        y1_coord=0.1,
+        x2_coord=0.2,
+        y2_coord=0.2,
+        x3_coord=0.3,
+        y3_coord=0.3,
+        x4_coord=0.4,
+        y4_coord=0.4,
         probability=0.8
     ),
-    Predictions(
+    PrimitivePredictions(
         task_id=1,
         primitive_class_id=2,
-        x_coord=0.2,
-        y_coord=0.2,
-        width=0.1,
-        height=0.1,
-        rotation=0.2,
+        x1_coord=0.2,
+        y1_coord=0.2,
+        x2_coord=0.3,
+        y2_coord=0.3,
+        x3_coord=0.4,
+        y3_coord=0.4,
+        x4_coord=0.5,
+        y4_coord=0.5,
         probability=0.88
     ),
-    Predictions(
+    PrimitivePredictions(
         task_id=1,
         primitive_class_id=3,
-        x_coord=0.8,
-        y_coord=0.8,
-        width=0.1,
-        height=0.1,
-        rotation=0.2,
+        x1_coord=0.3,
+        y1_coord=0.3,
+        x2_coord=0.4,
+        y2_coord=0.4,
+        x3_coord=0.5,
+        y3_coord=0.5,
+        x4_coord=0.6,
+        y4_coord=0.6,
         probability=0.85
     ),
-    Predictions(
+    PrimitivePredictions(
         task_id=4,
         primitive_class_id=3,
-        x_coord=0.8,
-        y_coord=0.8,
-        width=0.1,
-        height=0.1,
-        rotation=0.2,
+        x1_coord=0.4,
+        y1_coord=0.4,
+        x2_coord=0.5,
+        y2_coord=0.5,
+        x3_coord=0.6,
+        y3_coord=0.6,
+        x4_coord=0.7,
+        y4_coord=0.7,
         probability=0.28
     ),
 ]
@@ -219,21 +233,34 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['status_id'], ['status.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('predictions',
+    op.create_table('primitive_predictions',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('task_id', sa.Integer(), nullable=False),
     sa.Column('primitive_class_id', sa.Integer(), nullable=False),
-    sa.Column('x_coord', sa.Float(), nullable=False),
-    sa.Column('y_coord', sa.Float(), nullable=False),
-    sa.Column('width', sa.Float(), nullable=False),
-    sa.Column('height', sa.Float(), nullable=False),
-    sa.Column('rotation', sa.Float(), nullable=False),
+    sa.Column('x1_coord', sa.Float(), nullable=False),
+    sa.Column('y1_coord', sa.Float(), nullable=False),
+    sa.Column('x2_coord', sa.Float(), nullable=False),
+    sa.Column('y2_coord', sa.Float(), nullable=False),
+    sa.Column('x3_coord', sa.Float(), nullable=False),
+    sa.Column('y3_coord', sa.Float(), nullable=False),
+    sa.Column('x4_coord', sa.Float(), nullable=False),
+    sa.Column('y4_coord', sa.Float(), nullable=False),
     sa.Column('probability', sa.Float(), nullable=False),
     sa.ForeignKeyConstraint(['primitive_class_id'], ['primitive_class.id'], ),
     sa.ForeignKeyConstraint(['task_id'], ['tasks.id'], ondelete='cascade'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('id')
     )
+    op.create_table('scene_class_predictions',
+                    sa.Column('id', sa.Integer(), nullable=False),
+                    sa.Column('task_id', sa.Integer(), nullable=False),
+                    sa.Column('scene_class_id', sa.Integer(), nullable=False),
+                    sa.Column('scene_class_prob', sa.Float(), nullable=False),
+                    sa.ForeignKeyConstraint(['scene_class_id'], ['scene_class.id'], ),
+                    sa.ForeignKeyConstraint(['task_id'], ['tasks.id'], ondelete='cascade'),
+                    sa.PrimaryKeyConstraint('id'),
+                    sa.UniqueConstraint('id')
+                    )
     # ### end Alembic commands ###
 
     session = Session(bind=op.get_bind())
@@ -271,7 +298,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Downgrade schema."""
     # ### commands auto generated by Alembic - please adjust! ###
-    op.drop_table('predictions')
+    op.drop_table('primitive_predictions')
     op.drop_table('tasks')
     op.drop_table('users')
     op.drop_table('status')
@@ -279,6 +306,7 @@ def downgrade() -> None:
     op.drop_table('primitive_class')
     op.drop_table('detection_models')
     op.drop_table('classification_models')
+    op.drop_table('scene_class_predictions')
     # ### end Alembic commands ###
 
     session = Session(bind=op.get_bind())

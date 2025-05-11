@@ -16,7 +16,8 @@ from src.task_service.src.modules.db_models.models import (base_metadata,
                                                            ClassificationModels,
                                                            Users,
                                                            Tasks,
-                                                           Predictions
+                                                           PrimitivePredictions,
+                                                           SceneClassPredictions
                                                            )
 
 # this is the Alembic Config object, which provides

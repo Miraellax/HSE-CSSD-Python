@@ -75,15 +75,28 @@ CREATE TABLE tasks (
     FOREIGN KEY(status_id) REFERENCES status (id)
 );
 
-CREATE TABLE predictions (
+CREATE TABLE scene_class_predictions (
+    id SERIAL NOT NULL,
+    task_id INTEGER NOT NULL,
+    scene_class_id INTEGER NOT NULL,
+    scene_class_prob FLOAT NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY(task_id) REFERENCES tasks (id),
+    FOREIGN KEY(scene_class_id) REFERENCES scene_class (id)
+);
+
+CREATE TABLE primitive_predictions (
     id SERIAL NOT NULL, 
     task_id INTEGER NOT NULL, 
     primitive_class_id INTEGER NOT NULL, 
-    x_coord FLOAT NOT NULL, 
-    y_coord FLOAT NOT NULL, 
-    width FLOAT NOT NULL, 
-    height FLOAT NOT NULL, 
-    rotation FLOAT NOT NULL, 
+    x1_coord FLOAT NOT NULL,
+    y1_coord FLOAT NOT NULL,
+    x2_coord FLOAT NOT NULL,
+    y2_coord FLOAT NOT NULL,
+    x3_coord FLOAT NOT NULL,
+    y3_coord FLOAT NOT NULL,
+    x4_coord FLOAT NOT NULL,
+    y4_coord FLOAT NOT NULL,
     probability FLOAT NOT NULL
 --    ,
 --    PRIMARY KEY (id, task_id),
@@ -116,33 +129,34 @@ CREATE USER MAPPING FOR CURRENT_USER
         SERVER foreign_server_3
         OPTIONS (user 'task-service', password '123963');
 
-CREATE FOREIGN TABLE predictions_1 PARTITION OF predictions
+CREATE FOREIGN TABLE predictions_1 PARTITION OF primitive_predictions
     FOR VALUES WITH (MODULUS 4, REMAINDER 0)
     SERVER foreign_server_1
-    OPTIONS (schema_name 'public', table_name 'predictions');
+    OPTIONS (schema_name 'public', table_name 'primitive_predictions');
 
-CREATE FOREIGN TABLE predictions_2 PARTITION OF predictions
+CREATE FOREIGN TABLE predictions_2 PARTITION OF primitive_predictions
     FOR VALUES WITH (MODULUS 4, REMAINDER 1)
     SERVER foreign_server_2
-    OPTIONS (schema_name 'public', table_name 'predictions');
+    OPTIONS (schema_name 'public', table_name 'primitive_predictions');
 
-CREATE FOREIGN TABLE predictions_3 PARTITION OF predictions
+CREATE FOREIGN TABLE predictions_3 PARTITION OF primitive_predictions
     FOR VALUES WITH (MODULUS 4, REMAINDER 2)
     SERVER foreign_server_3
-    OPTIONS (schema_name 'public', table_name 'predictions');
+    OPTIONS (schema_name 'public', table_name 'primitive_predictions');
 
-CREATE TABLE predictions_4 PARTITION OF predictions
+CREATE TABLE predictions_4 PARTITION OF primitive_predictions
     FOR VALUES WITH (MODULUS 4, REMAINDER 3);
 
 INSERT INTO scene_class (scene_class) VALUES
     ('office'),
-    ('beach'),
-    ('street');
+    ('warehouse'),
+    ('livingroom'),
+    ('greenhouse');
 
 INSERT INTO primitive_class (primitive_class) VALUES
-    ('cuboid'),
+    ('cube'),
     ('sphere'),
-    ('pyramid'),
+    ('cone'),
     ('torus'),
     ('cylinder');
 
@@ -152,11 +166,10 @@ INSERT INTO status (status) VALUES
     ('done');
 
 INSERT INTO detection_models (name) VALUES
-    ('YOLO'),
-    ('SSD');
+    ('YOLOv11m-obb');
 
 INSERT INTO classification_models (name) VALUES
-    ('model_v1');
+    ('GRU_model_v1');
 
 INSERT INTO users (username, hashed_password) VALUES
     ('first', '$2b$12$SmZBPfFaw78FguMgRarX5e1iKckloh6Pi/3Q1ZSGuOzC345gHRL8C'),
@@ -168,23 +181,26 @@ INSERT INTO tasks (owner_id,
                    classification_model_id,
                    status_id,
                    input_path) VALUES
-    (1, 1, 1, 1, 3, 'img_1.png'),
-    (1, null, 2, 1, 1, 'img_2.png'),
-    (1, null, 1, 1, 2, 'img_3.png'),
-    (1, 1, 1, 1, 3, 'img_4.png');
+    (1, 1, 1, 1, 3, 'images\\img_1.png'),
+    (1, null, 1, 1, 1, 'images\\img_2.png'),
+    (1, null, 1, 1, 2, 'images\\img_3.png'),
+    (1, 1, 1, 1, 3, 'images\\img_4.png');
 
-INSERT INTO predictions (task_id,
+INSERT INTO primitive_predictions (task_id,
                          primitive_class_id,
-                         x_coord,
-                         y_coord,
-                         width,
-                         height,
-                         rotation,
+                         x1_coord,
+                         y1_coord,
+                         x2_coord,
+                         y2_coord,
+                         x3_coord,
+                         y3_coord,
+                         x4_coord,
+                         y4_coord,
                          probability) VALUES
-    (1, 1, 0.5, 0.5, 0.1, 0.1, 0.2, 0.8),
-    (1, 2, 0.2, 0.2, 0.1, 0.1, 0.2, 0.88),
-    (1, 3, 0.8, 0.8, 0.1, 0.1, 0.2, 0.85),
-    (4, 3, 0.8, 0.8, 0.1, 0.1, 0.2, 0.28);
+    (1, 1, 0.51, 0.51, 0.52, 0.52, 0.53, 0.53, 0.54, 0.54, 0.8),
+    (1, 2, 0.2,  0.2,  0.1,  0.1,  0.2,  0.2,  0.1,  0.1,  0.88),
+    (1, 3, 0.8,  0.8,  0.1,  0.1,  0.8,  0.8,  0.1,  0.1,  0.85),
+    (4, 3, 0.8,  0.8,  0.1,  0.1,  0.8,  0.8,  0.1,  0.1,  0.28);
 
 INSERT INTO alembic_version (version_num) VALUES ('fb76fd147766') RETURNING alembic_version.version_num;
 

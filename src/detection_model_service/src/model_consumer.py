@@ -13,7 +13,8 @@ config = {
 
     # Fixed properties
     'group.id': 'detection-model',
-    'auto.offset.reset': 'earliest'
+    'auto.offset.reset': 'earliest',
+    'fetch.message.max.bytes': 52428800
 }
 
 # Create Consumer instance
