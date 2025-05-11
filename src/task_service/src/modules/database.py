@@ -1,8 +1,8 @@
 import os
 import dotenv
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+# from sqlalchemy import create_engine
+# from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
 from .db_models.models import Tasks, Status, SceneClass, PrimitiveClass, DetectionModels, ClassificationModels, Predictions, Users
@@ -38,67 +38,52 @@ async def get_db():
     async with session_maker() as session:
         yield session
 
+def get_db_session():
+    return session_maker()
+
 # Словарь классов сцен
 dbSceneClasses = [
     SceneClass(
-        id=1,
         scene_class="office"),
     SceneClass(
-        id=2,
         scene_class="beach"),
     SceneClass(
-        id=3,
         scene_class="street")
 ]
 
 # Словарь классов примитивов
 dbPrimitiveClasses = [
     PrimitiveClass(
-        id=1,
         primitive_class="cuboid"),
     PrimitiveClass(
-        id=2,
         primitive_class="sphere"),
     PrimitiveClass(
-        id=3,
         primitive_class="pyramid"),
     PrimitiveClass(
-        id=4,
         primitive_class="torus"),
     PrimitiveClass(
-        id=5,
         primitive_class="cylinder")
 ]
 
 # Словарь статусов
 dbStatuses = [
-    Status(id=1,
-           status="queued"),
-    Status(id=2,
-           status="in progress"),
-    Status(id=3,
-           status="done")
+    Status(status="queued"),
+    Status(status="in progress"),
+    Status(status="done")
 ]
 
 # Словарь моделей детекции
 dbDModels = [
-    DetectionModels(id=1,
-                   name="YOLO"),
-    DetectionModels(id=2,
-                   name="SSD"),
-    ClassificationModels(id=1,
-                   name="model_v1"),
+    DetectionModels(name="YOLO"),
+    DetectionModels(name="SSD"),
+    ClassificationModels(name="model_v1"),
 ]
 
 # Тестовые данные
 dbUsers = [
-    Users(
-        id=1,
-        username="first",
+    Users(username="first",
         hashed_password="$2b$12$SmZBPfFaw78FguMgRarX5e1iKckloh6Pi/3Q1ZSGuOzC345gHRL8C"), # 111
-    Users(
-        id=2,
-        username="second",
+    Users(username="second",
         hashed_password="$2b$12$n8evGhlqi4pJHmiykHfFzuEqPnE2qLhl1apdj9/.D8cbHCGZmTejO"), # 222
 ]
 
@@ -143,7 +128,6 @@ dbTasks = [
 
 dbPredictions = [
     Predictions(
-        id=1,
         task_id=1,
         primitive_class_id=1,
         x_coord=0.5,
@@ -154,7 +138,6 @@ dbPredictions = [
         probability=0.8
     ),
     Predictions(
-        id=2,
         task_id=1,
         primitive_class_id=2,
         x_coord=0.2,
@@ -165,7 +148,6 @@ dbPredictions = [
         probability=0.88
     ),
     Predictions(
-        id=3,
         task_id=1,
         primitive_class_id=3,
         x_coord=0.8,
@@ -176,7 +158,6 @@ dbPredictions = [
         probability=0.85
     ),
     Predictions(
-        id=4,
         task_id=4,
         primitive_class_id=3,
         x_coord=0.8,

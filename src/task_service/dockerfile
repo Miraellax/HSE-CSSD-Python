@@ -3,11 +3,14 @@ FROM python:3.12-rc-alpine as python_build
 WORKDIR /app
 COPY ./src/requirements.txt .
 #Ставим зависимости
-RUN apk add libpq-dev rust cargo --virtual build-deps \
+RUN apk add alpine-conf
+RUN setup-apkrepos -cf
+RUN apk update
+RUN apk add "libssl3>3.3.3" libpq-dev rust cargo "librdkafka-dev>2.8.0" --virtual build-deps \
     && pip install -r requirements.txt \
     && apk del build-deps
 #Добавляем зависимости времени выполнения
-RUN apk add libpq
+RUN apk add libpq librdkafka>2.8.0
 COPY ./src .
 #Добавляем точку входа в контейнер
 ENTRYPOINT ["fastapi", "run", "main.py", "--port", "80"]
