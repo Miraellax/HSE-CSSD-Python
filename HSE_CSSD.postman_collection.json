@@ -1,0 +1,1121 @@
+{
+	"info": {
+		"_postman_id": "ac194144-caf2-4301-b9c7-aa3cf5781015",
+		"name": "HSE-arch",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "41576840"
+	},
+	"item": [
+		{
+			"name": "1 POST oauth/login",
+			"item": [
+				{
+					"name": "1_post_login_200",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"1_post_login_ok\", function() {\r",
+									"    pm.expect(pm.response.code).to.be.equals(200);\r",
+									"})\r",
+									"\r",
+									"pm.test(\"1_post_login_json_structure\", function() {\r",
+									"    const body = pm.response.json();\r",
+									"    \r",
+									"    pm.expect(body.access_token).to.be.a(\"string\");\r",
+									"    pm.expect(body.token_type).to.be.a(\"string\");\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "grant_type",
+									"value": "password",
+									"type": "text"
+								},
+								{
+									"key": "username",
+									"value": "first",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "111",
+									"type": "text"
+								},
+								{
+									"key": "scope",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": "http://localhost:80/oauth/login"
+					},
+					"response": []
+				},
+				{
+					"name": "1_post_login_422",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"1_post_login_invalid\", function() {\r",
+									"    pm.expect(pm.response.code).to.be.equals(422);\r",
+									"})\r",
+									"\r",
+									"pm.test(\"1_post_login_json_structure\", function() {\r",
+									"    const body = pm.response.json();\r",
+									"    \r",
+									"    pm.expect(body.detail).to.be.a(\"string\");\r",
+									"    pm.expect(body.detail).to.be.equal(\"Incorrect username or password\");\r",
+									"    \r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmaXJzdCIsImV4cCI6MTc0MDA2MzI5Nn0.9XloWont-KzCBYGDYDGz5N1tQv2LD8kDusZg684fApc"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "grant_type",
+									"value": "password",
+									"type": "text"
+								},
+								{
+									"key": "username",
+									"value": "?",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "?",
+									"type": "text"
+								},
+								{
+									"key": "scope",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": "http://localhost:80/oauth/login"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2 POST tasks",
+			"item": [
+				{
+					"name": "2_post_task_auth_200",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"2_post_task_auth_ok\", function() {\r",
+									"    pm.expect(pm.response.code).to.be.equals(200);\r",
+									"})\r",
+									"\r",
+									"pm.test(\"2_post_task_auth_json_structure\", function() {\r",
+									"    const body = pm.response.json();\r",
+									"    \r",
+									"    pm.expect(body.id).to.be.a(\"number\");\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmaXJzdCIsImV4cCI6MTc0ODUyNTU0M30.Gg6elFi-nuImlLKxzGfAiCX0Sr8oA5d7RNr7UjGuel8"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image_file",
+									"type": "file",
+									"src": "postman-cloud:///1f02cf3e-6b2a-4db0-a85e-ad6f9c5479cd"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:80/tasks/?detection_model_id=1&classification_model_id=1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "80",
+							"path": [
+								"tasks",
+								""
+							],
+							"query": [
+								{
+									"key": "detection_model_id",
+									"value": "1"
+								},
+								{
+									"key": "classification_model_id",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2_post_task_auth_400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"2_post_task_auth_bad_request\", function() {\r",
+									"    pm.expect(pm.response.code).to.be.equals(400);\r",
+									"})\r",
+									"\r",
+									"pm.test(\"2_post_task_auth_json_structure\", function() {\r",
+									"    const body = pm.response.json();\r",
+									"    \r",
+									"    pm.expect(body.detail).to.be.a(\"string\");\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmaXJzdCIsImV4cCI6MTc0ODUyNTU0M30.Gg6elFi-nuImlLKxzGfAiCX0Sr8oA5d7RNr7UjGuel8"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image_file",
+									"type": "file",
+									"src": "postman-cloud:///1efdce8a-d8e9-4220-bf70-815eedd74568"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:80/tasks/?detection_model_id=-1&classification_model_id=-1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "80",
+							"path": [
+								"tasks",
+								""
+							],
+							"query": [
+								{
+									"key": "detection_model_id",
+									"value": "-1"
+								},
+								{
+									"key": "classification_model_id",
+									"value": "-1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2_post_task_no_auth_401",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"2_post_task_no_auth_unauthorized\", function() {\r",
+									"    pm.expect(pm.response.code).to.be.equals(401);\r",
+									"})\r",
+									"\r",
+									"pm.test(\"2_post_task_no_auth_json_structure\", function() {\r",
+									"    const body = pm.response.json();\r",
+									"    pm.expect(body.detail).to.be.equals(\"Not authenticated\");\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image_file",
+									"type": "file",
+									"src": "postman-cloud:///1efdce8a-d8e9-4220-bf70-815eedd74568"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:80/tasks/?detection_model_id=1&classification_model_id=1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "80",
+							"path": [
+								"tasks",
+								""
+							],
+							"query": [
+								{
+									"key": "detection_model_id",
+									"value": "1"
+								},
+								{
+									"key": "classification_model_id",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3 GET tasks",
+			"item": [
+				{
+					"name": "3_get_tasks_auth_200",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"3_get_tasks_auth_ok\", function() {\r",
+									"    pm.expect(pm.response.code).to.be.equals(200);\r",
+									"})\r",
+									"\r",
+									"pm.test(\"3_get_tasks_auth_json_structure\", function() {\r",
+									"    const body = pm.response.json();\r",
+									"    \r",
+									"    pm.expect(body.tasks).to.be.a(\"array\");\r",
+									"    pm.expect(body.tasks).to.not.be.empty;\r",
+									"\r",
+									"    for (const item of body.tasks){\r",
+									"        pm.expect(item).to.be.a(\"object\");\r",
+									"        pm.expect(item.id).to.be.a(\"number\");\r",
+									"        pm.expect(item.status).to.be.a(\"string\");\r",
+									"        pm.expect(item.created_at).to.be.a(\"string\");\r",
+									"        pm.expect(item.input_path).to.be.a(\"string\");\r",
+									"    }\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmaXJzdCIsImV4cCI6MTc0ODUyNTU0M30.Gg6elFi-nuImlLKxzGfAiCX0Sr8oA5d7RNr7UjGuel8"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:80/tasks/"
+					},
+					"response": []
+				},
+				{
+					"name": "3_get_tasks_no_auth_401",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"3_get_tasks_no_auth_unauthorized\", function() {\r",
+									"    pm.expect(pm.response.code).to.be.equals(401);\r",
+									"})\r",
+									"\r",
+									"pm.test(\"3_get_tasks_auth_json_structure\", function() {\r",
+									"    const body = pm.response.json();\r",
+									"    pm.expect(body.detail).to.be.equals(\"Not authenticated\");\r",
+									"})\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:80/tasks/"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4 GET tasks/{id}/status",
+			"item": [
+				{
+					"name": "4_get_task_status_auth_200",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"4_get_task_status_auth_ok\", function() {\r",
+									"    pm.expect(pm.response.code).to.be.equals(200);\r",
+									"})\r",
+									"\r",
+									"pm.test(\"4_get_task_status_auth_json_structure\", function() {\r",
+									"    const body = pm.response.json();\r",
+									"    \r",
+									"    pm.expect(body).to.be.a(\"object\");\r",
+									"    pm.expect(body.id).to.be.a(\"number\");\r",
+									"    pm.expect(body.id).to.be.equal(11);\r",
+									"    pm.expect(body.status).to.be.a(\"string\");\r",
+									"\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmaXJzdCIsImV4cCI6MTc0ODUyNTU0M30.Gg6elFi-nuImlLKxzGfAiCX0Sr8oA5d7RNr7UjGuel8"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:80/tasks/11/status"
+					},
+					"response": []
+				},
+				{
+					"name": "4_get_task_status_auth_404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"4_get_task_status_auth_not_found\", function() {\r",
+									"    pm.expect(pm.response.code).to.be.equals(404);\r",
+									"})\r",
+									"\r",
+									"pm.test(\"4_get_task_status_auth_not_found_json_structure\", function() {\r",
+									"    const body = pm.response.json();\r",
+									"    \r",
+									"    pm.expect(body).to.be.a(\"object\");\r",
+									"    pm.expect(body.detail).to.be.equal(\"Task with id -1 does not exist.\");\r",
+									"\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmaXJzdCIsImV4cCI6MTc0ODUyNTU0M30.Gg6elFi-nuImlLKxzGfAiCX0Sr8oA5d7RNr7UjGuel8"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:80/tasks/-1/status"
+					},
+					"response": []
+				},
+				{
+					"name": "4_get_task_status_no_auth_401",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"4_get_task_status_no_auth_unauthorized\", function() {\r",
+									"    pm.expect(pm.response.code).to.be.equals(401);\r",
+									"})\r",
+									"\r",
+									"pm.test(\"4_get_task_status_auth_json_structure\", function() {\r",
+									"    const body = pm.response.json();\r",
+									"    console.log(body)\r",
+									"    pm.expect(body.detail).to.be.equals(\"Not authenticated\");\r",
+									"})\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:80/tasks/2/status"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "5 GET tasks/{id}/status",
+			"item": [
+				{
+					"name": "5_get_task_input_auth_200",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"5_get_task_input_auth_ok\", function() {\r",
+									"    pm.expect(pm.response.code).to.be.equals(200);\r",
+									"})\r",
+									"\r",
+									"pm.test(\"5_get_task_input_auth_json_structure\", function() {\r",
+									"    const body = pm.response;\r",
+									"    \r",
+									"    pm.expect(body.contentInfo().contentType).to.be.equal(\"image/jpeg\");\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmaXJzdCIsImV4cCI6MTc0ODUyNTU0M30.Gg6elFi-nuImlLKxzGfAiCX0Sr8oA5d7RNr7UjGuel8"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:80/tasks/11/input"
+					},
+					"response": []
+				},
+				{
+					"name": "5_get_task_input_auth_404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"5_get_task_input_auth_not_found\", function() {\r",
+									"    pm.expect(pm.response.code).to.be.equals(404);\r",
+									"})\r",
+									"\r",
+									"pm.test(\"5_get_task_input_auth_not_found_json_structure\", function() {\r",
+									"    const body = pm.response.json();\r",
+									"    \r",
+									"    pm.expect(body).to.be.a(\"object\");\r",
+									"    pm.expect(body.detail).to.be.equal(\"Task with id -1 does not exist.\");\r",
+									"\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmaXJzdCIsImV4cCI6MTc0ODUyNTU0M30.Gg6elFi-nuImlLKxzGfAiCX0Sr8oA5d7RNr7UjGuel8"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:80/tasks/-1/input"
+					},
+					"response": []
+				},
+				{
+					"name": "5_get_task_input_no_auth_401",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"5_get_task_input_no_auth_unauthorized\", function() {\r",
+									"    pm.expect(pm.response.code).to.be.equals(401);\r",
+									"})\r",
+									"\r",
+									"pm.test(\"5_get_task_input_auth_json_structure\", function() {\r",
+									"    const body = pm.response.json();\r",
+									"    console.log(body)\r",
+									"    pm.expect(body.detail).to.be.equals(\"Not authenticated\");\r",
+									"})\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:80/tasks/2/status"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "6 GET tasks/{id}/result",
+			"item": [
+				{
+					"name": "6_get_task_result_auth_200",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"6_get_task_result_auth_ok\", function() {\r",
+									"    pm.expect(pm.response.code).to.be.equals(200);\r",
+									"})\r",
+									"\r",
+									"pm.test(\"6_get_task_result_auth_json_structure\", function() {\r",
+									"    const body = pm.response.json();\r",
+									"    \r",
+									"    pm.expect(body).to.be.a(\"object\");\r",
+									"\r",
+									"    pm.expect(body.id).to.be.a(\"number\");\r",
+									"    pm.expect(body.id).to.be.equal(11);\r",
+									"    pm.expect(body.status).to.be.a(\"string\");\r",
+									"    pm.expect(body.result).to.be.a(\"object\");\r",
+									"    pm.expect(body.result.image_class).to.be.equal(null);\r",
+									"    pm.expect(body.result.primitives).to.be.a(\"array\");\r",
+									"\r",
+									"    for (const item of body.result.primitives){\r",
+									"        pm.expect(item).to.be.a(\"object\");\r",
+									"        pm.expect(item.primitive_class).to.be.a(\"string\");\r",
+									"        pm.expect(item.x).to.be.a(\"number\");\r",
+									"        pm.expect(item.y).to.be.a(\"number\");\r",
+									"        pm.expect(item.width).to.be.a(\"number\");\r",
+									"        pm.expect(item.height).to.be.a(\"number\");\r",
+									"        pm.expect(item.rotation).to.be.a(\"number\");\r",
+									"        pm.expect(item.probability).to.be.a(\"number\");\r",
+									"    }\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmaXJzdCIsImV4cCI6MTc0ODUyNTU0M30.Gg6elFi-nuImlLKxzGfAiCX0Sr8oA5d7RNr7UjGuel8"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:80/tasks/11/result"
+					},
+					"response": []
+				},
+				{
+					"name": "6_get_task_result_auth_404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"6_get_task_result_auth_not_found\", function() {\r",
+									"    pm.expect(pm.response.code).to.be.equals(404);\r",
+									"})\r",
+									"\r",
+									"pm.test(\"6_get_task_result_auth_not_found_json_structure\", function() {\r",
+									"    const body = pm.response.json();\r",
+									"    \r",
+									"    pm.expect(body).to.be.a(\"object\");\r",
+									"    pm.expect(body.detail).to.be.equal(\"Task with id -1 does not exist.\");\r",
+									"\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmaXJzdCIsImV4cCI6MTc0ODUyNTU0M30.Gg6elFi-nuImlLKxzGfAiCX0Sr8oA5d7RNr7UjGuel8"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:80/tasks/-1/result"
+					},
+					"response": []
+				},
+				{
+					"name": "6_get_task_result_no_auth_401",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"6_get_task_result_no_auth_unauthorized\", function() {\r",
+									"    pm.expect(pm.response.code).to.be.equals(401);\r",
+									"})\r",
+									"\r",
+									"pm.test(\"6_get_task_result_auth_json_structure\", function() {\r",
+									"    const body = pm.response.json();\r",
+									"    console.log(body)\r",
+									"    pm.expect(body.detail).to.be.equals(\"Not authenticated\");\r",
+									"})\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:80/tasks/2/status"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "7 GET models",
+			"item": [
+				{
+					"name": "7_get_models_auth_200",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"7_get_models_auth_ok\", function() {\r",
+									"    pm.expect(pm.response.code).to.be.equals(200);\r",
+									"})\r",
+									"\r",
+									"pm.test(\"7_get_models_auth_json_structure\", function() {\r",
+									"    const body = pm.response.json();\r",
+									"    \r",
+									"    pm.expect(body).to.be.a(\"object\");\r",
+									"\r",
+									"    pm.expect(body.detection_models).to.be.a(\"array\");\r",
+									"    pm.expect(body.detection_models).to.not.be.empty;\r",
+									"    pm.expect(body.classification_models).to.be.a(\"array\");\r",
+									"    pm.expect(body.classification_models).to.not.be.empty;\r",
+									"    \r",
+									"    for (const item of body.detection_models){\r",
+									"        pm.expect(item).to.be.a(\"object\");\r",
+									"        pm.expect(item.model_name).to.be.a(\"string\");\r",
+									"        pm.expect(item.model_id).to.be.a(\"number\");\r",
+									"    }\r",
+									"\r",
+									"    for (const item of body.classification_models){\r",
+									"        pm.expect(item).to.be.a(\"object\");\r",
+									"        pm.expect(item.model_name).to.be.a(\"string\");\r",
+									"        pm.expect(item.model_id).to.be.a(\"number\");\r",
+									"    }\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmaXJzdCIsImV4cCI6MTc0ODUyNTU0M30.Gg6elFi-nuImlLKxzGfAiCX0Sr8oA5d7RNr7UjGuel8"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:80/models/"
+					},
+					"response": []
+				},
+				{
+					"name": "7_get_models_no_auth_401",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"7_get_models_no_auth_unauthorized\", function() {\r",
+									"    pm.expect(pm.response.code).to.be.equals(401);\r",
+									"})\r",
+									"\r",
+									"pm.test(\"7_get_models_auth_json_structure\", function() {\r",
+									"    const body = pm.response.json();\r",
+									"    console.log(body)\r",
+									"    pm.expect(body.detail).to.be.equals(\"Not authenticated\");\r",
+									"})\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:80/models/"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "8 DELETE tasks/{id}",
+			"item": [
+				{
+					"name": "8_delete_task_auth_200",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"8_delete_task_auth_ok\", function() {\r",
+									"    pm.expect(pm.response.code).to.be.equals(200);\r",
+									"})\r",
+									"\r",
+									"pm.test(\"8_delete_task_auth_json_structure\", function() {\r",
+									"    const body = pm.response.json();\r",
+									"    \r",
+									"    pm.expect(body.id).to.be.a(\"number\");\r",
+									"    pm.expect(body.id).to.be.equal(11);\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmaXJzdCIsImV4cCI6MTc0ODUyNTU0M30.Gg6elFi-nuImlLKxzGfAiCX0Sr8oA5d7RNr7UjGuel8"
+							}
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": "http://localhost:80/tasks/11"
+					},
+					"response": []
+				},
+				{
+					"name": "8_delete_taskt_auth_404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"6_get_task_result_auth_not_found\", function() {\r",
+									"    pm.expect(pm.response.code).to.be.equals(404);\r",
+									"})\r",
+									"\r",
+									"pm.test(\"6_get_task_result_auth_not_found_json_structure\", function() {\r",
+									"    const body = pm.response.json();\r",
+									"    \r",
+									"    pm.expect(body).to.be.a(\"object\");\r",
+									"    pm.expect(body.detail).to.be.equal(\"Task with id -1 does not exist.\");\r",
+									"\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmaXJzdCIsImV4cCI6MTc0ODUyNTU0M30.Gg6elFi-nuImlLKxzGfAiCX0Sr8oA5d7RNr7UjGuel8"
+							}
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": "http://localhost:80/tasks/-1"
+					},
+					"response": []
+				},
+				{
+					"name": "8_delete_task_no_auth_401",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"6_get_task_result_no_auth_unauthorized\", function() {\r",
+									"    pm.expect(pm.response.code).to.be.equals(401);\r",
+									"})\r",
+									"\r",
+									"pm.test(\"6_get_task_result_auth_json_structure\", function() {\r",
+									"    const body = pm.response.json();\r",
+									"    console.log(body)\r",
+									"    pm.expect(body.detail).to.be.equals(\"Not authenticated\");\r",
+									"})\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": "http://localhost:80/tasks/5"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "test_service_connection",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"2_post_task_auth_ok\", function() {\r",
+							"    pm.expect(pm.response.code).to.be.equals(200);\r",
+							"})\r",
+							"\r",
+							"pm.test(\"2_post_task_auth_json_structure\", function() {\r",
+							"    const body = pm.response.json();\r",
+							"    \r",
+							"    pm.expect(body.id).to.be.a(\"number\");\r",
+							"})"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": {
+						"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmaXJzdCIsImV4cCI6MTc0ODUyNTU0M30.Gg6elFi-nuImlLKxzGfAiCX0Sr8oA5d7RNr7UjGuel8"
+					}
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "image_file",
+							"type": "file",
+							"src": "postman-cloud:///1efdce8a-d8e9-4220-bf70-815eedd74568"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:80/tasks/test_service_connection/?detection_model_id=1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "80",
+					"path": [
+						"tasks",
+						"test_service_connection",
+						""
+					],
+					"query": [
+						{
+							"key": "detection_model_id",
+							"value": "1"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Result visualization",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const template = pm.response.text();\r",
+							"\r",
+							"pm.visualizer.set(template);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": {
+						"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmaXJzdCIsImV4cCI6MTc0ODUyNTU0M30.Gg6elFi-nuImlLKxzGfAiCX0Sr8oA5d7RNr7UjGuel8"
+					}
+				},
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:80/ui/results/53"
+			},
+			"response": []
+		},
+		{
+			"name": "Post task UI",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const template = pm.response.text();\r",
+							"\r",
+							"pm.visualizer.set(template);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": {
+						"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmaXJzdCIsImV4cCI6MTc0ODUyNTU0M30.Gg6elFi-nuImlLKxzGfAiCX0Sr8oA5d7RNr7UjGuel8"
+					}
+				},
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:80/ui/tasks"
+			},
+			"response": []
+		}
+	]
+}
