@@ -61,8 +61,8 @@ def close_producer():
 topic_detected_primitives = "detected-primitives"
 
 # task_id length = .env/TASK_ID_BYTE_SIZE
-async def dispatch_task_detected_primitives(task_id: bytes, result: bytes, loop):
-    result = await producer.produce(topic=topic_detected_primitives, value=task_id + result, loop=loop)
+async def dispatch_task_detected_primitives(task_id: bytes, d_model_id:bytes, c_model_id:bytes, result: bytes, loop):
+    result = await producer.produce(topic=topic_detected_primitives, value=task_id + d_model_id + c_model_id + result, loop=loop)
     return result
 
 

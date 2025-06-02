@@ -14,6 +14,8 @@ from model_producer import dispatch_task_detected_primitives
 dotenv.load_dotenv("../../task_service/.env")
 
 TASK_ID_BYTE_SIZE = int(os.getenv("TASK_ID_BYTE_SIZE"))
+D_MODEL_ID_BYTE_SIZE = int(os.getenv("D_MODEL_ID_BYTE_SIZE"))
+C_MODEL_ID_BYTE_SIZE = int(os.getenv("C_MODEL_ID_BYTE_SIZE"))
 
 async def main():
     consumer = get_consumer()
@@ -30,16 +32,21 @@ async def main():
                 print("Consumed event from topic {topic}.".format(topic=msg.topic()))
 
                 # Get task id to send result back and get image to predict
-                task_id, image_bytes = msg.value()[0:TASK_ID_BYTE_SIZE], msg.value()[TASK_ID_BYTE_SIZE:]
+                msg_value = msg.value()
+                task_id, d_model_id, c_model_id, image_bytes = (int.from_bytes(msg_value[0:TASK_ID_BYTE_SIZE]),
+                                                                int.from_bytes(msg_value[TASK_ID_BYTE_SIZE:D_MODEL_ID_BYTE_SIZE]),
+                                                                int.from_bytes(msg_value[TASK_ID_BYTE_SIZE+D_MODEL_ID_BYTE_SIZE:TASK_ID_BYTE_SIZE+D_MODEL_ID_BYTE_SIZE+C_MODEL_ID_BYTE_SIZE]),
+                                                                (msg_value[TASK_ID_BYTE_SIZE+D_MODEL_ID_BYTE_SIZE+C_MODEL_ID_BYTE_SIZE:]))
 
                 # Process image
                 image = Image.open(io.BytesIO(image_bytes))
-                print(type(image), image)
                 result = await ai_model.process(image)
-                print(f"DETECTION MODEL RESULT for task_id({int.from_bytes(task_id)}):", result)
+                print(f"DETECTION MODEL RESULT for task_id({task_id}):", result)
 
                 # Send resulting primitives to server
-                answ = await dispatch_task_detected_primitives(task_id=task_id,
+                answ = await dispatch_task_detected_primitives(task_id=task_id.to_bytes(TASK_ID_BYTE_SIZE),
+                                                               d_model_id=d_model_id.to_bytes(D_MODEL_ID_BYTE_SIZE),
+                                                               c_model_id=c_model_id.to_bytes(C_MODEL_ID_BYTE_SIZE),
                                                                result=json.dumps(result).encode("utf-8"),
                                                                loop=asyncio.get_event_loop())
     except KeyboardInterrupt:

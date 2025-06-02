@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+	<style>
+	* { font-family: Helvetica; }
+	</style>
+	<body style="background-color:white;">
+
+
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table>
+				<tbody>
+					<tr>
+						<td><b>Модель детекции</b></td>
+						<td>
+							<select name="d_models" id="d_models"></select>
+						</td>
+					</tr>
+					<tr>
+						<td><b>Модель классификации</b></td>
+						<td>
+							<select name="c_models" id="c_models"></select>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+            <form style="margin: 20px;" action="javascript:post_task()" id="form" enctype='multipart/form-data' method='post'>
+                <input id="image_file" name='image_file' type='file'/>
+                <input type='submit'/>
+            </form>
+			<div id="response_text"></div>
+		</div>
+	</body>
+	<script type="text/javascript">
+		d_models_select = document.getElementById("d_models");
+		c_models_select = document.getElementById("c_models");
+
+		for (const item of {{d_models|tojson}})
+		{
+			var opt = document.createElement('option');
+			opt.value = item[0];
+			opt.innerHTML = item[1];
+			d_models_select.add(opt);
+		}
+		for (const item of {{c_models|tojson}})
+		{
+			var opt = document.createElement('option');
+			opt.value = item[0];
+			opt.innerHTML = item[1];
+			c_models_select.add(opt);
+		}
+
+        async function post_task() {
+        	document.getElementById("response_text").innerHTML = "Отправка запроса...";
+        	const url = `http://localhost:80/tasks?detection_model_id=${document.getElementById("d_models").selectedOptions[0].value}&classification_model_id=${document.getElementById("c_models").selectedOptions[0].value}`;
+			const res = await (await fetch(url,
+								 {method: "POST",
+								  headers:{'Authorization': '{{token}}' },
+								  body: new FormData(document.getElementById("form"))
+								  })).text();
+
+			document.getElementById("response_text").innerHTML = "<b>Ответ сервера:</b><br>" + res;
+        };
+	</script>
+</html>

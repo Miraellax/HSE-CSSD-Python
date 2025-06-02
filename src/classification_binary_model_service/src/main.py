@@ -31,9 +31,9 @@ async def main():
                 # Get task id to send result back and get image to predict
                 msg_value = msg.value()
                 task_id, d_model_id, c_model_id, primitives_bytes = (int.from_bytes(msg_value[0:TASK_ID_BYTE_SIZE]),
-                                                                int.from_bytes(msg_value[TASK_ID_BYTE_SIZE:D_MODEL_ID_BYTE_SIZE]),
-                                                                int.from_bytes(msg_value[TASK_ID_BYTE_SIZE+D_MODEL_ID_BYTE_SIZE:TASK_ID_BYTE_SIZE+D_MODEL_ID_BYTE_SIZE+C_MODEL_ID_BYTE_SIZE]),
-                                                                (msg_value[TASK_ID_BYTE_SIZE+D_MODEL_ID_BYTE_SIZE+C_MODEL_ID_BYTE_SIZE:]))
+                                                                     int.from_bytes(msg_value[TASK_ID_BYTE_SIZE:D_MODEL_ID_BYTE_SIZE]),
+                                                                     int.from_bytes(msg_value[TASK_ID_BYTE_SIZE+D_MODEL_ID_BYTE_SIZE:TASK_ID_BYTE_SIZE+D_MODEL_ID_BYTE_SIZE+C_MODEL_ID_BYTE_SIZE]),
+                                                                     (msg_value[TASK_ID_BYTE_SIZE+D_MODEL_ID_BYTE_SIZE+C_MODEL_ID_BYTE_SIZE:]))
                 primitives = json.loads(primitives_bytes.decode('utf-8'))
 
                 # Process image

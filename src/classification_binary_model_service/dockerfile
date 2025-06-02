@@ -1,0 +1,13 @@
+FROM pytorch/pytorch:2.7.0-cuda12.6-cudnn9-runtime as python_build
+#FROM python:3.12.10-slim-bullseye as python_build
+#Переносим исходники в контейнер
+WORKDIR /app
+COPY ./src/requirements.txt .
+#Ставим зависимости
+RUN apt-get update
+RUN apt-get install -y librdkafka-dev librdkafka1
+RUN pip install -r requirements.txt
+#Добавляем зависимости времени выполнения
+COPY ./src .
+#Добавляем точку входа в контейнер
+ENTRYPOINT ["python", "main.py"]
