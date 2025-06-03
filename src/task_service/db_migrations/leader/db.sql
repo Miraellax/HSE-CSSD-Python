@@ -169,7 +169,8 @@ INSERT INTO detection_models (name) VALUES
     ('YOLOv11m-obb');
 
 INSERT INTO classification_models (name) VALUES
-    ('GRU_model_v1');
+    ('GRU_model_v1'),
+    ('GRU_model_v2_binary');
 
 INSERT INTO users (username, hashed_password) VALUES
     ('first', '$2b$12$SmZBPfFaw78FguMgRarX5e1iKckloh6Pi/3Q1ZSGuOzC345gHRL8C'),

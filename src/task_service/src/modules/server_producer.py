@@ -63,21 +63,26 @@ topic_detect_primitives = "detect-primitives"
 # Топик для задач, требующих классификацию изображения моделью классификации
 topic_classify_image = "classify-image"
 
+# Топик для задач, требующих классификацию изображения ансамблем бинарных моделей классификации
+topic_classify_binary_image = "classify-binary-image"
+
 # Топик для задач с результатами детекции примитивов от модели детекции
 topic_detected_primitives = "detected-primitives"
 
 # Топик для задач с результатами классификации изображения от модели классификации
 topic_classified_image = "classified-image"
 
-async def dispatch_task_detect_primitives(task_id: bytes, image: bytes, loop):
+async def dispatch_task_detect_primitives(task_id: bytes, d_model_id:bytes, c_model_id:bytes, image: bytes, loop):
     try:
-        result = await producer.produce(topic=topic_detect_primitives, value=task_id+image, loop=loop)
+        result = await producer.produce(topic=topic_detect_primitives, value=task_id+d_model_id+c_model_id+image, loop=loop)
     except Exception as e:
         print(e)
     return result
 
-async def dispatch_task_classify_image(task_id:bytes, primitives: bytes, loop):
-    result = await producer.produce(topic=topic_classify_image, value=task_id+primitives, loop=loop)
+async def dispatch_task_classify_image(task_id:bytes, d_model_id:bytes, c_model_id:bytes, primitives: bytes, loop):
+    result = await producer.produce(topic=topic_classify_image, value=task_id+d_model_id+c_model_id+primitives, loop=loop)
     return result
 
-
+async def dispatch_task_classify_binary_image(task_id:bytes, d_model_id:bytes, c_model_id:bytes, primitives: bytes, loop):
+    result = await producer.produce(topic=topic_classify_binary_image, value=task_id+d_model_id+c_model_id+primitives, loop=loop)
+    return result

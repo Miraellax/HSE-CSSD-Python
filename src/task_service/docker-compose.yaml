@@ -121,6 +121,8 @@ services:
       POSTGRES_USER: task-service
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       TASK_ID_BYTE_SIZE: 16
+      D_MODEL_ID_BYTE_SIZE: 1
+      C_MODEL_ID_BYTE_SIZE: 1
     depends_on:
       postgres:
         condition: service_healthy
@@ -186,6 +188,8 @@ services:
       ./kafka-topics.sh --bootstrap-server kafka:9092 --if-not-exists --create --topic classify-image
       ./kafka-topics.sh --bootstrap-server kafka:9092 --if-not-exists --create --topic detected-primitives
       ./kafka-topics.sh --bootstrap-server kafka:9092 --if-not-exists --create --topic classified-image
+      ./kafka-topics.sh --bootstrap-server kafka:9092 --if-not-exists --create --topic classify-binary-image
+      
 
       echo -e 'Successfully created the following topics:'
       ./kafka-topics.sh --bootstrap-server kafka:9092 --list
@@ -198,6 +202,8 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       TASK_ID_BYTE_SIZE: 16
+      D_MODEL_ID_BYTE_SIZE: 1
+      C_MODEL_ID_BYTE_SIZE: 1
     networks:
       - task-service
     deploy:
@@ -218,6 +224,30 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       TASK_ID_BYTE_SIZE: 16
+      D_MODEL_ID_BYTE_SIZE: 1
+      C_MODEL_ID_BYTE_SIZE: 1
+    networks:
+      - task-service
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    depends_on:
+      init-kafka:
+        condition: service_completed_successfully
+  classification_model_2:
+    container_name: classification-binary-model-service
+    build:
+      context: ../classification_binary_model_service
+      dockerfile: ../classification_binary_model_service/dockerfile
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      TASK_ID_BYTE_SIZE: 16
+      D_MODEL_ID_BYTE_SIZE: 1
+      C_MODEL_ID_BYTE_SIZE: 1
     networks:
       - task-service
     deploy:

@@ -67,6 +67,7 @@ dbStatuses = [
 dbDModels = [
     DetectionModels(name="YOLOv11m-obb"),
     ClassificationModels(name="GRU_model_v1"),
+    ClassificationModels(name="GRU_model_v2_binary")
 ]
 
 # Тестовые данные

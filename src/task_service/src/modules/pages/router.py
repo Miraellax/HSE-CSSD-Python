@@ -13,12 +13,14 @@ from .. import database
 from ..auth.router import get_current_user
 from ..auth.schema import User
 from ..tasks.router import get_task_result_by_id
+from ..ai_models import dao as ai_models_dao
 
-router = APIRouter(prefix='/results')
+router = APIRouter(prefix='/ui')
 templates = Jinja2Templates(directory='modules/templates')
 
 
-@router.get('/{task_id}')
+# Pae to visualize results
+@router.get('/results/{task_id}')
 async def get_task_results(task_id: int,
                            request: Request,
                            current_user: Annotated[User, Depends(get_current_user)],
@@ -40,3 +42,19 @@ async def get_task_results(task_id: int,
             primitive["primitive_class"] = "конус"
 
     return templates.TemplateResponse(name='results.html', context={'request': request, 'res': res_json})
+
+# Page to send image for prediction
+@router.get('/tasks')
+async def get_task_results(request: Request,
+                           current_user: Annotated[User, Depends(get_current_user)],
+                           db: AsyncSession = Depends(database.get_db)
+                           ):
+    d_models = [(model.id, model.name, "detection_model") for model in await ai_models_dao.get_detection_models(db=db)]
+    c_models = [(model.id, model.name, "classification_model") for model in
+                await ai_models_dao.get_classification_models(db=db)]
+
+
+    return templates.TemplateResponse(name='input.html', context={'request': request,
+                                                                  'token':request.headers["authorization"],
+                                                                  'd_models': d_models,
+                                                                  'c_models': c_models})

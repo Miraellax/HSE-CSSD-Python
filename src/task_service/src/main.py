@@ -6,7 +6,7 @@ from threading import Thread
 import dotenv
 import uvicorn
 from fastapi import FastAPI
-from starlette.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 from modules.database import get_db_session
 from modules.tasks.router import router as router_tasks
@@ -19,7 +19,8 @@ from modules.primitive_class.dao import get_primitive_class_id
 from modules.scene_class_predictions import schema as scene_class_prediction_schema
 from modules.scene_class_predictions.dao import post_scene_class_predictions
 from modules.scene_class.dao import get_scene_class_id
-from modules.tasks.dao import update_task_status, update_task_scene_class
+from modules.tasks.dao import update_task_status, update_task_scene_class, get_task_models
+from modules.ai_models.dao import get_detection_models, get_classification_models
 
 import modules.server_producer as sp
 from modules.server_consumer import get_consumer
@@ -28,9 +29,14 @@ from modules.server_consumer import get_consumer
 dotenv.load_dotenv()
 
 TASK_ID_BYTE_SIZE = int(os.getenv("TASK_ID_BYTE_SIZE"))
+D_MODEL_ID_BYTE_SIZE = int(os.getenv("D_MODEL_ID_BYTE_SIZE"))
+C_MODEL_ID_BYTE_SIZE = int(os.getenv("C_MODEL_ID_BYTE_SIZE"))
 
 init_db = True
 
+classification_models = {1: "GRU_model_v1",
+                         2: "GRU_model_v2_binary"}
+detection_models = {1: "YOLOv11m-obb"}
 
 async def server_consumer(main_loop):
     consumer = get_consumer()
@@ -48,8 +54,11 @@ async def server_consumer(main_loop):
                 # Обработка результатов детекции
                 if msg.topic() == "detected-primitives":
                     # Получаем айди задачи и результат
-                    val = msg.value()
-                    task_id, result = int.from_bytes(val[0:TASK_ID_BYTE_SIZE]), (val[TASK_ID_BYTE_SIZE:]).decode("utf-8")
+                    msg_value = msg.value()
+                    task_id, d_model_id, c_model_id, result = (int.from_bytes(msg_value[0:TASK_ID_BYTE_SIZE]),
+                                                               int.from_bytes(msg_value[TASK_ID_BYTE_SIZE:D_MODEL_ID_BYTE_SIZE]),
+                                                               int.from_bytes(msg_value[TASK_ID_BYTE_SIZE+D_MODEL_ID_BYTE_SIZE:TASK_ID_BYTE_SIZE+D_MODEL_ID_BYTE_SIZE+C_MODEL_ID_BYTE_SIZE]),
+                                                               (msg_value[TASK_ID_BYTE_SIZE+D_MODEL_ID_BYTE_SIZE+C_MODEL_ID_BYTE_SIZE:]).decode("utf-8"))
 
                     # Загрузка результата в БД по айди задачи
                     primitive_result_dicts = json.loads(result)
@@ -75,14 +84,42 @@ async def server_consumer(main_loop):
 
                     asyncio.ensure_future(load_primitive_predictions(), loop=main_loop)
 
-                    # Вызов классификации
-                    await sp.dispatch_task_classify_image(task_id=task_id.to_bytes(TASK_ID_BYTE_SIZE),
-                                                          primitives=json.dumps(primitive_result_dicts).encode('utf-8'),
-                                                          loop=asyncio.get_event_loop())
+                    # Выбор модели классификации по айди модели в задаче
+                    task_cl_model = classification_models[c_model_id]
 
+                    if task_cl_model == "GRU_model_v1":
+                        # Вызов классификации мультиклассовой моделью
+                        await sp.dispatch_task_classify_image(task_id=task_id.to_bytes(TASK_ID_BYTE_SIZE),
+                                                              d_model_id=d_model_id.to_bytes(D_MODEL_ID_BYTE_SIZE),
+                                                              c_model_id=c_model_id.to_bytes(C_MODEL_ID_BYTE_SIZE),
+                                                              primitives=json.dumps(primitive_result_dicts).encode('utf-8'),
+                                                              loop=asyncio.get_event_loop())
+
+                    elif task_cl_model == "GRU_model_v2_binary":
+                        # Вызов классификации ансамблем бинарных моделей
+                        await sp.dispatch_task_classify_binary_image(task_id=task_id.to_bytes(TASK_ID_BYTE_SIZE),
+                                                                     d_model_id=d_model_id.to_bytes(D_MODEL_ID_BYTE_SIZE),
+                                                                     c_model_id=c_model_id.to_bytes(C_MODEL_ID_BYTE_SIZE),
+                                                                     primitives=json.dumps(primitive_result_dicts).encode('utf-8'),
+                                                                     loop=asyncio.get_event_loop())
+                    else:
+                        print(f"Classification model with id '{c_model_id}' does not exist, task cannot be processed.")
+
+                        async def task_status_update():
+                            async with get_db_session() as ses:
+                                # status_id 3 = done
+                                await update_task_status(db=ses, task_id=task_id, new_status_id=3)
+
+                        asyncio.ensure_future(task_status_update(), loop=main_loop)
+
+                # Обработка результатов классификации
                 elif msg.topic() == "classified-image":
                     # Получаем айди задачи и результат
-                    task_id, result = int.from_bytes(msg.value()[0:TASK_ID_BYTE_SIZE]), (msg.value()[TASK_ID_BYTE_SIZE:]).decode("utf-8")
+                    msg_value = msg.value()
+                    task_id, d_model_id, c_model_id, result = (int.from_bytes(msg_value[0:TASK_ID_BYTE_SIZE]),
+                                                               int.from_bytes(msg_value[TASK_ID_BYTE_SIZE:D_MODEL_ID_BYTE_SIZE]),
+                                                               int.from_bytes(msg_value[TASK_ID_BYTE_SIZE + D_MODEL_ID_BYTE_SIZE:C_MODEL_ID_BYTE_SIZE]),
+                                                               (msg_value[TASK_ID_BYTE_SIZE + D_MODEL_ID_BYTE_SIZE + C_MODEL_ID_BYTE_SIZE:]).decode("utf-8"))
 
                     # Загрузка результата в БД по айди задачи
                     class_result_dicts = json.loads(result)
@@ -136,6 +173,18 @@ app.include_router(router_tasks)
 app.include_router(router_models)
 
 app.include_router(router_auth)
+
+origins = [
+    "*",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=80)

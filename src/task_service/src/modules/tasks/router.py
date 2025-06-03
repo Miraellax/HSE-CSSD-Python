@@ -29,6 +29,8 @@ from ..server_producer import dispatch_task_detect_primitives
 
 dotenv.load_dotenv()
 TASK_ID_BYTE_SIZE = int(os.getenv("TASK_ID_BYTE_SIZE"))
+D_MODEL_ID_BYTE_SIZE = int(os.getenv("D_MODEL_ID_BYTE_SIZE"))
+C_MODEL_ID_BYTE_SIZE = int(os.getenv("C_MODEL_ID_BYTE_SIZE"))
 
 router = APIRouter(prefix="/tasks")
 
@@ -42,9 +44,9 @@ def read_image(file_path):
 # GET api/tasks/{id:integer}
 @router.get("/{task_id}", response_model=task_schemas.Task)
 async def get_task_by_id(current_user: Annotated[User, Depends(get_current_user)],
-                   task_id: int,
-                   db: AsyncSession = Depends(database.get_db)
-                   ) -> Union[task_schemas.Task, None]:
+                         task_id: int,
+                         db: AsyncSession = Depends(database.get_db)
+                         ) -> Union[task_schemas.Task, None]:
     # will get task only if auth
     task = await task_dao.get_task(db=db, owner_id=current_user.id, task_id=task_id)
 
@@ -63,7 +65,6 @@ async def post_task(
                     detection_model_id: int,
                     classification_model_id: int,
                     db: AsyncSession = Depends(database.get_db)) -> JSONResponse:
-
     # will post only if auth
     if image_file is not None:
         d_models = [(model.id, model.name, "detection_model") for model in await ai_models_dao.get_detection_models(db=db)]
@@ -96,8 +97,10 @@ async def post_task(
         # SEND task to detection model via Kafka and await the sending
         try:
             await dispatch_task_detect_primitives(task_id=task.id.to_bytes(TASK_ID_BYTE_SIZE),
-                                                          image=read_image(input_path),
-                                                          loop=asyncio.get_event_loop())
+                                                  d_model_id=detection_model_id.to_bytes(D_MODEL_ID_BYTE_SIZE),
+                                                  c_model_id=classification_model_id.to_bytes(C_MODEL_ID_BYTE_SIZE),
+                                                  image=read_image(input_path),
+                                                  loop=asyncio.get_event_loop())
         except Exception:
             # Delete task that was not sent to detection
             await task_dao.delete_task(db=db, task=task)

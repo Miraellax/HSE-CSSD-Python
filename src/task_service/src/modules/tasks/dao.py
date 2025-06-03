@@ -13,6 +13,12 @@ async def get_task(db: AsyncSession, owner_id: int, task_id: int) -> Union[model
 
     return (await db.execute(q)).scalar()
 
+async def get_task_models(db: AsyncSession, task_id: int) -> Union[models.Tasks, None]:
+    q = select(models.Tasks).filter(models.Tasks.id == task_id)
+    r = (await db.execute(q)).scalar()
+
+    return {"classification_model_id": r["classification_model_id"],
+            "detection_model_id": r["detection_model_id"]}
 
 async def get_tasks_by_owner(db: AsyncSession, owner_id: int) -> List[models.Tasks]:
     q = select(models.Tasks).filter(models.Tasks.owner_id == owner_id)
